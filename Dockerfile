@@ -7,7 +7,7 @@ RUN yum install -y yum-utils
 RUN yum-config-manager --enable powertools
 RUN yum install -y libcxl-devel libocxl-devel
 
-RUN yum install -y git
+RUN yum install -y git sudo
 RUN yum groupinstall -y "Development Tools"
 
 WORKDIR /opt
