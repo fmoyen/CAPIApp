@@ -1,8 +1,24 @@
 FROM quay.io/centos/centos:latest
-RUN yum upgrade -y
+
 RUN yum install -y langpacks-en glibc-all-langpacks
+RUN yum upgrade -y
+
 RUN yum install -y yum-utils
 RUN yum-config-manager --enable powertools
 RUN yum install -y libcxl-devel libocxl-devel
+
+RUN yum install -y git
+RUN yum groupinstall -y "Development Tools"
+
+WORKDIR /opt
+RUN git clone https://github.com/open-power/snap.git
+RUN git clone https://github.com/OpenCAPI/oc-accel.git
+
+WORKDIR /opt/snap
+RUN make software
+
+WORKDIR /opt/oc-accel
+RUN make software
+
 COPY StayUp.bash /usr/local/bin
 CMD /usr/local/bin/StayUp.bash 
