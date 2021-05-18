@@ -20,5 +20,12 @@ RUN make software
 WORKDIR /opt/oc-accel
 RUN make software
 
+RUN groupadd -g 1000 fabrice
+RUN useradd -ms /bin/bash fabrice -u 1000 -g fabrice
+RUN echo "fabrice        ALL=(ALL)       NOPASSWD: ALL" | EDITOR='tee' visudo -f /etc/sudoers.d/specialUsers
+
 COPY StayUp.bash /usr/local/bin
+USER fabrice
+WORKDIR /home/fabrice
 CMD /usr/local/bin/StayUp.bash 
+
