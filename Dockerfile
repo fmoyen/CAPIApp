@@ -22,6 +22,7 @@ RUN make software
 
 RUN groupadd -g 1000 fabrice
 RUN useradd -ms /bin/bash fabrice -u 1000 -g fabrice
+RUN echo "fabrice:fabpasswd" | chpasswd
 RUN echo "fabrice        ALL=(ALL)       NOPASSWD: ALL" | EDITOR='tee' visudo -f /etc/sudoers.d/specialUsers
 
 COPY StayUp.bash /usr/local/bin
