@@ -1,1 +1,0 @@
-SUBSYSTEM=="cxl", MODE="666"
