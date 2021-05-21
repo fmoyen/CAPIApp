@@ -20,6 +20,8 @@ RUN make software
 WORKDIR /opt/oc-accel
 RUN make software
 
+COPY udev/rules.d/20-snap.rules /etc/udev/rules.d
+
 RUN groupadd -g 1000 fabrice
 RUN useradd -ms /bin/bash fabrice -u 1000 -g fabrice
 RUN echo "fabrice:fabpasswd" | chpasswd
