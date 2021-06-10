@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "/opt/oc-accel/software/tools/oc_find_card -AALL -v $*"
+/opt/oc-accel/software/tools/oc_find_card -AALL -v $*

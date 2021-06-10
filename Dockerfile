@@ -26,6 +26,11 @@ RUN useradd -ms /bin/bash fabrice -u 1000 -g fabrice
 RUN echo "fabrice:fabpasswd" | chpasswd
 RUN echo "fabrice        ALL=(ALL)       NOPASSWD: ALL" | EDITOR='tee' visudo -f /etc/sudoers.d/specialUsers
 
+COPY scripts/my_oc_find_card /usr/local/bin
+COPY scripts/my_oc_maint /usr/local/bin
+COPY scripts/my_snap_find_card /usr/local/bin
+COPY scripts/my_snap_maint /usr/local/bin
+
 COPY StayUp.bash /usr/local/bin
 #USER fabrice
 #WORKDIR /home/fabrice
