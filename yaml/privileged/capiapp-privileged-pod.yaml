@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: capiapp-privileged-pod
+  labels:
+    name: capiapp-privileged
+  namespace: fabriceproject
+  annotations:
+    openshift.io/scc: privileged
+spec:
+  containers:
+  - name: capiapp-privileged-pod
+    image: docker.io/fmoyen/capiapp:latest
+    ports:
+      - containerPort: 8080
+        protocol: TCP
+    securityContext:
+        privileged: true
+  serviceAccount: fabriceproject-service-account
+  serviceAccountName: fabriceproject-service-account
+

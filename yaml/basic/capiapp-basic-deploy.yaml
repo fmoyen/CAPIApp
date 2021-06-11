@@ -1,0 +1,41 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: capiapp-basic
+  namespace: fabriceproject
+  labels:
+    app: capiapp-basic
+    app.kubernetes.io/component: capiapp-basic
+    app.kubernetes.io/instance: capiapp-basic
+    app.kubernetes.io/part-of: capiapp-basic-app
+    app.openshift.io/runtime-namespace: fabriceproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: capiapp-basic
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: capiapp-basic
+        deploymentconfig: capiapp-basic
+    spec:
+      containers:
+        - name: capiapp-basic
+          image: docker.io/fmoyen/capiapp:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

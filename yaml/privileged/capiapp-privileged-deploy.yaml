@@ -1,0 +1,45 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: capiapp-privileged
+  namespace: fabriceproject
+  labels:
+    app: capiapp-privileged
+    app.kubernetes.io/component: capiapp-privileged
+    app.kubernetes.io/instance: capiapp-privileged
+    app.kubernetes.io/part-of: capiapp-privileged-app
+    app.openshift.io/runtime-namespace: fabriceproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: capiapp-privileged
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: capiapp-privileged
+        deploymentconfig: capiapp-privileged
+    spec:
+      containers:
+        - name: capiapp-privileged
+          image: docker.io/fmoyen/capiapp:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          securityContext:
+            privileged: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+      serviceAccount: fabriceproject-service-account
+      serviceAccountName: fabriceproject-service-account
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
