@@ -1,0 +1,54 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: capiapp-privileged-sys-devices
+  namespace: fabriceproject
+  labels:
+    app: capiapp-privileged-sys-devices
+    app.kubernetes.io/component: capiapp-privileged-sys-devices
+    app.kubernetes.io/instance: capiapp-privileged-sys-devices
+    app.kubernetes.io/part-of: capiapp-privileged-sys-devices-app
+    app.openshift.io/runtime-namespace: fabriceproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: capiapp-privileged-sys-devices
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: capiapp-privileged-sys-devices
+        deploymentconfig: capiapp-privileged-sys-devices
+    spec:
+      nodeName: hawk07.ocp4.ocpcapi.com
+      containers:
+        - name: capiapp-privileged-sys-devices-pod
+          image: docker.io/fmoyen/capiapp:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: sys-devices-ocxl
+              mountPath: /OCXLSysDevice
+          securityContext:
+            privileged: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+      serviceAccount: fabriceproject-service-account
+      serviceAccountName: fabriceproject-service-account
+      volumes:
+        - name: sys-devices-ocxl
+          persistentVolumeClaim:
+            claimName: sys-devices-ocxl-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+
