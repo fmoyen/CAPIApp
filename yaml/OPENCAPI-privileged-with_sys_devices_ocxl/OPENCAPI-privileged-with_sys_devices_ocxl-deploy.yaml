@@ -1,35 +1,35 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: capiapp-privileged-sys-devices
+  name: OPENCAPI-privileged-sys-devices-ocxl
   namespace: fabriceproject
   labels:
-    app: capiapp-privileged-sys-devices
-    app.kubernetes.io/component: capiapp-privileged-sys-devices
-    app.kubernetes.io/instance: capiapp-privileged-sys-devices
-    app.kubernetes.io/part-of: capiapp-privileged-sys-devices-app
+    app: OPENCAPI-privileged-sys-devices-ocxl
+    app.kubernetes.io/component: OPENCAPI-privileged-sys-devices-ocxl
+    app.kubernetes.io/instance: OPENCAPI-privileged-sys-devices-ocxl
+    app.kubernetes.io/part-of: OPENCAPI-privileged-sys-devices-ocxl-app
     app.openshift.io/runtime-namespace: fabriceproject
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: capiapp-privileged-sys-devices
+      app: OPENCAPI-privileged-sys-devices-ocxl
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: capiapp-privileged-sys-devices
-        deploymentconfig: capiapp-privileged-sys-devices
+        app: OPENCAPI-privileged-sys-devices-ocxl
+        deploymentconfig: OPENCAPI-privileged-sys-devices-ocxl
     spec:
       nodeName: hawk07.ocp4.ocpcapi.com
       containers:
-        - name: capiapp-privileged-sys-devices-pod
+        - name: OPENCAPI-privileged-sys-devices-ocxl-pod
           image: docker.io/fmoyen/capiapp:latest
           ports:
             - containerPort: 8080
               protocol: TCP
           volumeMounts:
-            - name: sys-devices-ocxl
+            - name: sys-devices-ocxl-ocxl
               mountPath: /OCXLSysDevice
           securityContext:
             privileged: true
@@ -41,9 +41,9 @@ spec:
       serviceAccount: fabriceproject-service-account
       serviceAccountName: fabriceproject-service-account
       volumes:
-        - name: sys-devices-ocxl
+        - name: sys-devices-ocxl-ocxl
           persistentVolumeClaim:
-            claimName: sys-devices-ocxl-pvc
+            claimName: sys-devices-ocxl-ocxl-pvc
   strategy:
     type: RollingUpdate
     rollingUpdate:
