@@ -1,28 +1,28 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: CAPI-privileged
+  name: capi-privileged
   namespace: fabriceproject
   labels:
-    app: CAPI-privileged
-    app.kubernetes.io/component: CAPI-privileged
-    app.kubernetes.io/instance: CAPI-privileged
-    app.kubernetes.io/part-of: CAPI-privileged-app
+    app: capi-privileged
+    app.kubernetes.io/component: capi-privileged
+    app.kubernetes.io/instance: capi-privileged
+    app.kubernetes.io/part-of: capi-privileged-app
     app.openshift.io/runtime-namespace: fabriceproject
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: CAPI-privileged
+      app: capi-privileged
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: CAPI-privileged
-        deploymentconfig: CAPI-privileged
+        app: capi-privileged
+        deploymentconfig: capi-privileged
     spec:
       containers:
-        - name: CAPI-privileged
+        - name: capi-privileged
           image: docker.io/fmoyen/capiapp:latest
           ports:
             - containerPort: 8080
