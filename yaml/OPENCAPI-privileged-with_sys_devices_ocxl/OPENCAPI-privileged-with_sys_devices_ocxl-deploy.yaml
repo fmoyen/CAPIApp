@@ -29,7 +29,7 @@ spec:
             - containerPort: 8080
               protocol: TCP
           volumeMounts:
-            - name: sys-devices-ocxl-ocxl
+            - name: sys-devices-ocxl
               mountPath: /OCXLSysDevice
           securityContext:
             privileged: true
@@ -41,9 +41,9 @@ spec:
       serviceAccount: fabriceproject-service-account
       serviceAccountName: fabriceproject-service-account
       volumes:
-        - name: sys-devices-ocxl-ocxl
+        - name: sys-devices-ocxl
           persistentVolumeClaim:
-            claimName: sys-devices-ocxl-ocxl-pvc
+            claimName: sys-devices-ocxl-pvc
   strategy:
     type: RollingUpdate
     rollingUpdate:

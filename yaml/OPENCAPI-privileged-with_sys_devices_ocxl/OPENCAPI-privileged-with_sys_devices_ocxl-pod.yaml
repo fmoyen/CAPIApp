@@ -16,7 +16,7 @@ spec:
         - containerPort: 80
           name: www
       volumeMounts:
-        - name: sys-devices-ocxl-ocxl
+        - name: sys-devices-ocxl
           mountPath: /OCXLSysDevice
       securityContext:
         privileged: true
@@ -24,7 +24,7 @@ spec:
   serviceAccountName: fabriceproject-service-account
 
   volumes:
-    - name: sys-devices-ocxl-ocxl
+    - name: sys-devices-ocxl
       persistentVolumeClaim:
-        claimName: sys-devices-ocxl-ocxl-pvc
+        claimName: sys-devices-ocxl-pvc
 
