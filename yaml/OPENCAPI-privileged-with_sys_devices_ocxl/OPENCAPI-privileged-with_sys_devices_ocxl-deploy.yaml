@@ -1,29 +1,29 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: OPENcapi-privileged-sys-devices-ocxl
+  name: opencapi-privileged-sys-devices-ocxl
   namespace: fabriceproject
   labels:
-    app: OPENcapi-privileged-sys-devices-ocxl
-    app.kubernetes.io/component: OPENcapi-privileged-sys-devices-ocxl
-    app.kubernetes.io/instance: OPENcapi-privileged-sys-devices-ocxl
-    app.kubernetes.io/part-of: OPENcapi-privileged-sys-devices-ocxl-app
+    app: opencapi-privileged-sys-devices-ocxl
+    app.kubernetes.io/component: opencapi-privileged-sys-devices-ocxl
+    app.kubernetes.io/instance: opencapi-privileged-sys-devices-ocxl
+    app.kubernetes.io/part-of: opencapi-privileged-sys-devices-ocxl-app
     app.openshift.io/runtime-namespace: fabriceproject
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: OPENcapi-privileged-sys-devices-ocxl
+      app: opencapi-privileged-sys-devices-ocxl
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: OPENcapi-privileged-sys-devices-ocxl
-        deploymentconfig: OPENcapi-privileged-sys-devices-ocxl
+        app: opencapi-privileged-sys-devices-ocxl
+        deploymentconfig: opencapi-privileged-sys-devices-ocxl
     spec:
       nodeName: hawk07.ocp4.ocpcapi.com
       containers:
-        - name: OPENcapi-privileged-sys-devices-ocxl-pod
+        - name: opencapi-privileged-sys-devices-ocxl-pod
           image: docker.io/fmoyen/capiapp:latest
           ports:
             - containerPort: 8080

@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: OPENcapi-privileged-sys-devices-ocxl-pod
+  name: opencapi-privileged-sys-devices-ocxl-pod
   labels:
-    name: OPENcapi-privileged-sys-devices-ocxl
+    name: opencapi-privileged-sys-devices-ocxl
   namespace: fabriceproject
   annotations:
     openshift.io/scc: privileged
 spec:
   nodeName: hawk07.ocp4.ocpcapi.com
   containers:
-    - name: OPENcapi-privileged-sys-devices-ocxl-pod
+    - name: opencapi-privileged-sys-devices-ocxl-pod
       image: docker.io/fmoyen/capiapp:latest
       ports:
         - containerPort: 80
