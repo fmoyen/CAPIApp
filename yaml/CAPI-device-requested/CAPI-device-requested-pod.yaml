@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: capi-device-requested-nodevcxl-pod
+  labels:
+    name: capi-device-requested-nodevcxl
+  namespace: fabriceproject
+spec:
+  containers:
+  - name: capi-device-requested-nodevcxl-pod
+    image: docker.io/fmoyen/capiapp:latest
+    resources:
+      limits:
+        xilinx.com/fpga-u200_capi2-0x0665: 1 # requesting 1x U200 capi2
+#    volumeMounts:
+#      - name: dev-cxl
+#        mountPath: /dev/cxl
+#  volumes:
+#    - name: dev-cxl
+#      persistentVolumeClaim:
+#        claimName: dev-cxl-pvc
+
