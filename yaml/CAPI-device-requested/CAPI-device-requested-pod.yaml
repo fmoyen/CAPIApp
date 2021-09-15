@@ -12,11 +12,4 @@ spec:
     resources:
       limits:
         xilinx.com/fpga-u200_capi2-0x0665: 1 # requesting 1x U200 capi2
-#    volumeMounts:
-#      - name: dev-cxl
-#        mountPath: /dev/cxl
-#  volumes:
-#    - name: dev-cxl
-#      persistentVolumeClaim:
-#        claimName: dev-cxl-pvc
 
