@@ -28,6 +28,7 @@ RUN echo "fabrice        ALL=(ALL)       NOPASSWD: ALL" | EDITOR='tee' visudo -f
 
 COPY scripts/my_oc_find_card /usr/local/bin
 COPY scripts/my_oc_maint /usr/local/bin
+COPY scripts/my_oc_maint_verbose /usr/local/bin
 COPY scripts/my_snap_find_card /usr/local/bin
 COPY scripts/my_snap_maint /usr/local/bin
 
