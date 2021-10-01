@@ -1,4 +1,10 @@
-Warning:
-This is the CAPIapp with full privilege, so working but unacceptable for production-like environment.
-For accessing to OpenCAPI cards, it is needed to mount the corresponding /sys/devices/pci..../00.../ocxlfn..../ocxl directory.
-Here for testing purpose, the /sys/devices/pci0004:00/0004:00:00.1/ocxlfn.0004:00:00.1/ocxl directory mount is hard-coded.
+# Warning:
+
+  - This is the CAPIapp requesting an OPENCAPI AD9H7 card with NO privilege, so it needs to have a device plugin fuctional to work, such as:
+https://github.com/fmoyen/OPENCAPI_as_a_Service
+
+  - To get OPENCAPI cards working with Openshift, it is needed to switch SELinux to Permissive mode (relabeling not working with OPENCAPI cards)
+
+  - For accessing to OpenCAPI cards, it is needed to mount the corresponding /sys/devices/pci..../00.../ocxlfn..../ocxl directory.
+
+  - Here for testing purpose, the /sys/devices/pci0004:00/0004:00:00.1/ocxlfn.0004:00:00.1/ocxl directory mount is hard-coded.
