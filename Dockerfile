@@ -13,7 +13,7 @@ RUN yum groupinstall -y "Development Tools"
 WORKDIR /opt
 RUN git clone https://github.com/open-power/snap.git
 RUN git clone https://github.com/OpenCAPI/oc-accel.git
-ADD libocxl_for_containers_fbarrat.tar.gz .
+ADD libocxl_for_containers.tar.gz .
 
 WORKDIR /opt/snap
 RUN make software
