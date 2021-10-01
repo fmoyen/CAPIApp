@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: opencapi-device-requested-sys-devices-ocxl-pod
+  labels:
+    name: opencapi-device-requested-sys-devices-ocxl
+  namespace: fabriceproject
+spec:
+  containers:
+    - name: opencapi-device-requested-sys-devices-ocxl-pod
+      image: docker.io/fmoyen/capiapp:latest
+      resources:
+        limits:
+          xilinx.com/fpga-ad9h7_ocapi-0x0666: 1 # requesting 1x AD9H7 opencapi
+
+      volumeMounts:
+        - name: sys-devices-ocxl
+          mountPath: /OCXLSysDevice
+
+  volumes:
+    - name: sys-devices-ocxl
+      persistentVolumeClaim:
+        claimName: sys-devices-ocxl-pvc
