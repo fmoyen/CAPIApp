@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sys-devices-ocxl-ad9h7-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem 
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: sys-devices-ocxl-ad9h7-storageclass 
+  local:
+    path: /sys/devices/pci0006:00/0006:00:00.1/ocxlfn.0006:00:00.1/ocxl
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - hawk08.ocp4.ocpcapi.10.3.76.170.nip.io
