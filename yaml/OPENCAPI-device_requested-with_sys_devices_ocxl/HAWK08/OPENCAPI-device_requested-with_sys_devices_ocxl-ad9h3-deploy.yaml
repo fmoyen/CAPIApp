@@ -1,0 +1,48 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: opencapi-ad9h3-device-requested
+  namespace: fabriceproject
+  labels:
+    app: opencapi-ad9h3-device-requested
+    app.kubernetes.io/component: opencapi-ad9h3-device-requested
+    app.kubernetes.io/instance: opencapi-ad9h3-device-requested
+    app.kubernetes.io/part-of: opencapi-ad9h3-device-requested-app
+    app.openshift.io/runtime-namespace: fabriceproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opencapi-ad9h3-device-requested
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: opencapi-ad9h3-device-requested
+        deploymentconfig: opencapi-ad9h3-device-requested
+    spec:
+      containers:
+        - name: opencapi-ad9h3-device-requested-pod
+          image: docker.io/fmoyen/capiapp:latest
+          resources:
+            limits:
+              xilinx.com/fpga-ad9h3_ocapi-0x0667: 1 # requesting 1x AD9H7 opencapi
+          volumeMounts:
+            - name: sys-devices-ocxl-ad9h3
+              mountPath: /OCXLSysDevice
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      schedulerName: default-scheduler
+      volumes:
+        - name: sys-devices-ocxl-ad9h3
+          persistentVolumeClaim:
+            claimName: sys-devices-ocxl-ad9h3-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+
