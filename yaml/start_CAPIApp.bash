@@ -33,7 +33,7 @@ echo
 CardChoice=`grep $Choice $TempFile | awk -F":" '{print $1}'`
 echo "your card choice is: $CardChoice"
 
-if `grep -q ocapi $CardChoice `; then
+if `echo $CardChoice | grep -q ocapi`; then
   CardType="Opencapi"
   YamlDir="OPENCAPI-device_requested-with_sys_devices_ocxl/$Node"
   YamlFile=`ls $YamlDir/OPENCAPI*${Choice}*deploy.yaml`
