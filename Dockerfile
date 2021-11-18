@@ -13,6 +13,7 @@ RUN yum groupinstall -y "Development Tools"
 WORKDIR /opt
 RUN git clone https://github.com/open-power/snap.git
 RUN git clone https://github.com/OpenCAPI/oc-accel.git
+RUN git clone https://github.com/OpenCAPI/oc-utils.git
 ADD libocxl_for_containers.tar.gz .
 
 WORKDIR /opt/snap
@@ -20,6 +21,9 @@ RUN make software
 
 WORKDIR /opt/oc-accel
 RUN make software
+
+WORKDIR /opt/oc-utils
+RUN make install
 
 RUN groupadd -g 1000 fabrice
 RUN useradd -ms /bin/bash fabrice -u 1000 -g fabrice
