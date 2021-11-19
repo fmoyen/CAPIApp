@@ -5,6 +5,8 @@ TempFile="/tmp/start_CAPIapp.tmp"
 Choice="nul"
 PvYamlFile=""
 PvcYamlFile=""
+ImagesPvYamlFile=""
+ImagesPvcYamlFile=""
 OCYamlFile=""
 YamlDir=""
 CardType=""
@@ -39,6 +41,8 @@ if `echo $CardChoice | grep -q ocapi`; then
   YamlFile=`ls $YamlDir/OPENCAPI*${Choice}*deploy.yaml`
   PvYamlFile=`ls $YamlDir/sys*${Choice}*pv.yaml`
   PvcYamlFile=`ls $YamlDir/sys*${Choice}*pvc.yaml`
+  ImagesPvYamlFile=`ls $YamlDir/images-${Choice}-pv.yaml`
+  ImagesPvcYamlFile=`ls $YamlDir/images-${Choice}-pvc.yaml`
 else
   CardType="Capi"
   YamlDir="CAPI-device-requested/$Node"
@@ -53,12 +57,15 @@ echo " --> $CardType"
 echo
 echo "starting the CAPIapp using these yaml files:"
 echo "--------------------------------------------"
-echo "  PV creation (if needed): $PvYamlFile"
-echo "  PVC creation (if needed): $PvcYamlFile"
-echo "  CAPIapp deployment creation: $YamlFile"
+echo "  PV creation (if needed):                   $PvYamlFile"
+echo "  PVC creation (if needed):                  $PvcYamlFile"
+echo "  Binary Image PV creation (if needed):      $ImagesPvYamlFile"
+echo "  Binary Image PVC creation (if needed):     $ImagesPvcYamlFile"
+echo
+echo "  CAPIapp deployment creation:               $YamlFile"
 echo
 
-for i in $PvYamlFile $PvcYamlFile $YamlFile; do
+for i in $PvYamlFile $PvcYamlFile $ImagesPvYamlFile $ImagesPvcYamlFile $YamlFile; do
   echo 
   echo "oc create -f $i"
   oc create -f $i
