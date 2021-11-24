@@ -30,6 +30,8 @@ spec:
           volumeMounts:
             - name: sys-devices-ocxl-ad9h7
               mountPath: /OCXLSysDevice
+            - name: images-ad9h7
+              mountPath: /images/ad9h7
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
@@ -38,6 +40,9 @@ spec:
         - name: sys-devices-ocxl-ad9h7
           persistentVolumeClaim:
             claimName: sys-devices-ocxl-ad9h7-pvc
+        - name: images-ad9h7
+          persistentVolumeClaim:
+            claimName: images-ad9h7-pvc
   strategy:
     type: RollingUpdate
     rollingUpdate:
