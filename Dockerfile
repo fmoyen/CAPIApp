@@ -9,6 +9,7 @@ RUN yum install -y libcxl-devel libocxl-devel
 
 RUN yum install -y git sudo
 RUN yum groupinstall -y "Development Tools"
+RUN yum install -y pciutils
 
 WORKDIR /opt
 RUN git clone https://github.com/open-power/snap.git
