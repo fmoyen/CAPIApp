@@ -63,12 +63,34 @@ echo "  Binary Image PV creation (if needed):      $ImagesPvYamlFile"
 echo "  Binary Image PVC creation (if needed):     $ImagesPvcYamlFile"
 echo
 echo "  CAPIapp deployment creation:               $YamlFile"
-echo
 
+echo
+echo "Do you want to choose (for testing purpose) a specific CAPIapp yaml file other than the one indicated above [y|n]?:"
+echo "-------------------------------------------------------------------------------------------------------------------"
+read YamlFileChoice
+if [ "$YamlFileChoice" == "y" ] || [ "$YamlFileChoice" == "Y" ] || [ "$YamlFileChoice" == "yes" ]; then
+  YamlFileOther=""
+  while [ -z "$YamlFileOther" ]; do
+    echo
+    echo "List of available CAPIapp yaml files for $Choice in $YamlDir directory :" 
+    echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" 
+    basename -a `ls $YamlDir/*CAPI*$Choice*.yaml`
+    echo
+    echo -e "please give the one that you want: \c"
+    read YamlFileOther
+  done
+  YamlFile=$YamlDir/$YamlFileOther
+else
+  echo "--> so the answer is NO"
+fi
+
+echo
+echo "starting the CAPIapp:"
+echo "---------------------"
 for i in $PvYamlFile $PvcYamlFile $ImagesPvYamlFile $ImagesPvcYamlFile $YamlFile; do
   echo 
   echo "oc create -f $i"
-  oc create -f $i
+  #oc create -f $i
   echo 
 done
 
