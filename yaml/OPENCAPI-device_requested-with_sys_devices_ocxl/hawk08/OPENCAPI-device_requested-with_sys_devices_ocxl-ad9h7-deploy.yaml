@@ -7,7 +7,7 @@ metadata:
     app: oc-ad9h7
     app.kubernetes.io/component: oc-ad9h7
     app.kubernetes.io/instance: oc-ad9h7
-    app.kubernetes.io/part-of: oc-ad9h7-app
+    app.kubernetes.io/part-of: capiapp-app
     app.openshift.io/runtime-namespace: fabriceproject
 spec:
   replicas: 1

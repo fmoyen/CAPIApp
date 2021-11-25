@@ -3,10 +3,12 @@
 Node="hawk08"
 TempFile="/tmp/start_CAPIapp.tmp"
 Choice="nul"
-PvYamlFile=""
-PvcYamlFile=""
-ImagesPvYamlFile=""
-ImagesPvcYamlFile=""
+DevicesPvYamlFile=""
+DevicesPvcYamlFile=""
+BusPvYamlFile=""
+BusPvcYamlFile=""
+ImagesDevicePvYamlFile=""
+ImagesDevicePvcYamlFile=""
 OCYamlFile=""
 YamlDir=""
 CardType=""
@@ -39,10 +41,12 @@ if `echo $CardChoice | grep -q ocapi`; then
   CardType="Opencapi"
   YamlDir="OPENCAPI-device_requested-with_sys_devices_ocxl/$Node"
   YamlFile=`ls $YamlDir/OPENCAPI-device*${Choice}*deploy.yaml`
-  PvYamlFile=`ls $YamlDir/sys*${Choice}*pv.yaml`
-  PvcYamlFile=`ls $YamlDir/sys*${Choice}*pvc.yaml`
-  ImagesPvYamlFile=`ls $YamlDir/images-${Choice}-pv.yaml`
-  ImagesPvcYamlFile=`ls $YamlDir/images-${Choice}-pvc.yaml`
+  DevicesPvYamlFile=`ls $YamlDir/sys-devices*${Choice}*pv.yaml`
+  DevicesPvcYamlFile=`ls $YamlDir/sys-devices*${Choice}*pvc.yaml`
+  BusPvYamlFile=`ls $YamlDir/sys-bus*${Choice}*pv.yaml`
+  BusPvcYamlFile=`ls $YamlDir/sys-bus*${Choice}*pvc.yaml`
+  ImagesDevicePvYamlFile=`ls $YamlDir/images-${Choice}-pv.yaml`
+  ImagesDevicePvcYamlFile=`ls $YamlDir/images-${Choice}-pvc.yaml`
 else
   CardType="Capi"
   YamlDir="CAPI-device-requested/$Node"
@@ -55,14 +59,16 @@ echo "-------------"
 echo " --> $CardType"
 
 echo
-echo "starting the CAPIapp using these yaml files:"
-echo "--------------------------------------------"
-echo "  PV creation (if needed):                   $PvYamlFile"
-echo "  PVC creation (if needed):                  $PvcYamlFile"
-echo "  Binary Image PV creation (if needed):      $ImagesPvYamlFile"
-echo "  Binary Image PVC creation (if needed):     $ImagesPvcYamlFile"
+echo "starting the CAPIapp using these yaml files from $YamlDir directory:"
+echo "------------------------------------------------------------------------------------------------------------------"
+echo "  /sys/devices PV creation (if needed):      `basename $DevicesPvYamlFile 2>/dev/null`"
+echo "  /sys/devices PVC creation (if needed):     `basename $DevicesPvcYamlFile 2>/dev/null`"
+echo "  /sys/bus PV creation (if needed):          `basename $BusPvYamlFile 2>/dev/null`"
+echo "  /sys/bus PVC creation (if needed):         `basename $BusPvcYamlFile 2>/dev/null`"
+echo "  Binary Image PV creation (if needed):      `basename $ImagesDevicePvYamlFile 2>/dev/null`"
+echo "  Binary Image PVC creation (if needed):     `basename $ImagesDevicePvcYamlFile 2>/dev/null`"
 echo
-echo "  CAPIapp deployment creation:               $YamlFile"
+echo "  CAPIapp deployment creation:               `basename $YamlFile`"
 
 echo
 echo "Do you want to choose (for testing purpose) a specific CAPIapp yaml file other than the one indicated above [y|n]?:"
@@ -87,7 +93,7 @@ fi
 echo
 echo "starting the CAPIapp:"
 echo "---------------------"
-for i in $PvYamlFile $PvcYamlFile $ImagesPvYamlFile $ImagesPvcYamlFile $YamlFile; do
+for i in $DevicesPvYamlFile $DevicesPvcYamlFile $BusPvYamlFile $BusPvcYamlFile $ImagesDevicePvYamlFile $ImagesDevicePvcYamlFile $YamlFile; do
   echo 
   echo "oc create -f $i"
   oc create -f $i

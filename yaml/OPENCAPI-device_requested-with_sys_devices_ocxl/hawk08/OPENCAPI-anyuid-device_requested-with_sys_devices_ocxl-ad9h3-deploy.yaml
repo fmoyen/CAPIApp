@@ -7,7 +7,7 @@ metadata:
     app: oc-ad9h3
     app.kubernetes.io/component: oc-ad9h3
     app.kubernetes.io/instance: oc-ad9h3
-    app.kubernetes.io/part-of: oc-ad9h3-app
+    app.kubernetes.io/part-of: capiapp-app
     app.openshift.io/runtime-namespace: fabriceproject
 spec:
   replicas: 1
@@ -30,6 +30,8 @@ spec:
           volumeMounts:
             - name: sys-devices-ocxl-ad9h3
               mountPath: /OCXLSysDevice
+            - name: sys-bus-ocxl-ad9h3
+              mountPath: /OCXLSysBus/0004:00:00.0
             - name: images-ad9h3
               mountPath: /images/ad9h3
           securityContext:
@@ -42,6 +44,9 @@ spec:
         - name: sys-devices-ocxl-ad9h3
           persistentVolumeClaim:
             claimName: sys-devices-ocxl-ad9h3-pvc
+        - name: sys-bus-ocxl-ad9h3
+          persistentVolumeClaim:
+            claimName: sys-bus-ocxl-ad9h3-pvc
         - name: images-ad9h3
           persistentVolumeClaim:
             claimName: images-ad9h3-pvc

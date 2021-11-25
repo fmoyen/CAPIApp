@@ -7,7 +7,7 @@ metadata:
     app: capi-u200
     app.kubernetes.io/component: capi-u200
     app.kubernetes.io/instance: capi-u200
-    app.kubernetes.io/part-of: capi-u200-app
+    app.kubernetes.io/part-of: capiapp-app
     app.openshift.io/runtime-namespace: fabriceproject
 spec:
   replicas: 1
