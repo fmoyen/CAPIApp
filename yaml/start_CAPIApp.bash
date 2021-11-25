@@ -38,7 +38,7 @@ echo "your card choice is: $CardChoice"
 if `echo $CardChoice | grep -q ocapi`; then
   CardType="Opencapi"
   YamlDir="OPENCAPI-device_requested-with_sys_devices_ocxl/$Node"
-  YamlFile=`ls $YamlDir/OPENCAPI*${Choice}*deploy.yaml`
+  YamlFile=`ls $YamlDir/OPENCAPI-device*${Choice}*deploy.yaml`
   PvYamlFile=`ls $YamlDir/sys*${Choice}*pv.yaml`
   PvcYamlFile=`ls $YamlDir/sys*${Choice}*pvc.yaml`
   ImagesPvYamlFile=`ls $YamlDir/images-${Choice}-pv.yaml`
@@ -46,7 +46,7 @@ if `echo $CardChoice | grep -q ocapi`; then
 else
   CardType="Capi"
   YamlDir="CAPI-device-requested/$Node"
-  YamlFile=`ls $YamlDir/CAPI*${Choice}*deploy.yaml`
+  YamlFile=`ls $YamlDir/CAPI-device*${Choice}*deploy.yaml`
 fi
 
 echo
@@ -90,7 +90,7 @@ echo "---------------------"
 for i in $PvYamlFile $PvcYamlFile $ImagesPvYamlFile $ImagesPvcYamlFile $YamlFile; do
   echo 
   echo "oc create -f $i"
-  #oc create -f $i
+  oc create -f $i
   echo 
 done
 
