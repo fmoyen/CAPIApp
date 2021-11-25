@@ -24,6 +24,8 @@ WORKDIR /opt/oc-accel
 RUN make software
 
 WORKDIR /opt/oc-utils
+RUN git fetch
+RUN git checkout container
 RUN make install
 
 RUN groupadd -g 1000 fabrice
