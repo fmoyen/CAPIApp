@@ -28,10 +28,16 @@ spec:
             limits:
               xilinx.com/fpga-ad9h3_ocapi-0x0667: 1 # requesting 1x AD9H7 opencapi
           volumeMounts:
-            - name: sys-devices-ocxl-ad9h3
-              mountPath: /OCXLSysDevice
-            - name: sys-bus-ocxl-ad9h3
-              mountPath: /OCXLSysBus/0004:00:00.0
+            - name: sys-devices-ocxl0-ad9h3
+              mountPath: /OCXLSys/devices/pci0004:00/0004:00:00.0
+            - name: sys-bus-ocxl0-ad9h3
+              mountPath: /OCXLSys/bus/pci/devices/0004:00:00.0
+            - name: sys-devices-ocxl1-ad9h3
+              mountPath: /OCXLSys/devices/pci0004:00/0004:00:00.1
+            - name: sys-bus-ocxl1-ad9h3
+              mountPath: /OCXLSys/bus/pci/devices/0004:00:00.1
+            - name: lib-modules-ocxl
+              mountPath: /lib/modules
             - name: images-ad9h3
               mountPath: /images/ad9h3
           securityContext:
@@ -41,12 +47,21 @@ spec:
       dnsPolicy: ClusterFirst
       schedulerName: default-scheduler
       volumes:
-        - name: sys-devices-ocxl-ad9h3
+        - name: sys-devices-ocxl0-ad9h3
           persistentVolumeClaim:
-            claimName: sys-devices-ocxl-ad9h3-pvc
-        - name: sys-bus-ocxl-ad9h3
+            claimName: sys-devices-ocxl.0-ad9h3-pvc
+        - name: sys-bus-ocxl0-ad9h3
           persistentVolumeClaim:
-            claimName: sys-bus-ocxl-ad9h3-pvc
+            claimName: sys-bus-ocxl.0-ad9h3-pvc
+        - name: sys-devices-ocxl1-ad9h3
+          persistentVolumeClaim:
+            claimName: sys-devices-ocxl.1-ad9h3-pvc
+        - name: sys-bus-ocxl1-ad9h3
+          persistentVolumeClaim:
+            claimName: sys-bus-ocxl.1-ad9h3-pvc
+        - name: lib-modules-ocxl
+          persistentVolumeClaim:
+            claimName: lib-modules-ocxl-pvc
         - name: images-ad9h3
           persistentVolumeClaim:
             claimName: images-ad9h3-pvc

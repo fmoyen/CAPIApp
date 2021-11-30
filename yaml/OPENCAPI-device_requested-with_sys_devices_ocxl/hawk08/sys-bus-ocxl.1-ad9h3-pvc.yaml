@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: sys-bus-ocxl.1-ad9h3-pvc
+  namespace: fabriceproject
+spec:
+  accessModes:
+  - ReadWriteOnce
+  volumeMode: Filesystem 
+  resources:
+    requests:
+      storage: 1Gi 
+  storageClassName: sys-bus-ocxl.1-ad9h3-storageclass 

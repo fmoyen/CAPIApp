@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: sys-devices-ocxl.0-ad9h3-pvc
+  namespace: fabriceproject
+spec:
+  accessModes:
+  - ReadWriteOnce
+  volumeMode: Filesystem 
+  resources:
+    requests:
+      storage: 1Gi 
+  storageClassName: sys-devices-ocxl.0-ad9h3-storageclass 
