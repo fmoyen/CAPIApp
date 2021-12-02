@@ -86,17 +86,14 @@ echo
 echo "  CAPIapp deployment creation:                      `basename $YamlFile`"
 
 echo
-YamlFileOther=""
-while [ -z "$YamlFileOther" ]; do
-  echo
-  echo "List of available CAPIapp yaml files for $Choice in $YamlDir directory :" 
-  echo "---------------------------------------------------------------------------------------------------------------------"
-  basename -a `ls $YamlDir/*CAPI*$Choice*.yaml`
-  echo
-  echo "please give the alternative one that you may want, or leave empty if you want to use `basename $YamlFile`:"
-  echo -e "?: \c"
-  read YamlFileOther
-done
+echo
+echo "List of available CAPIapp yaml files for $Choice in $YamlDir directory :" 
+echo "---------------------------------------------------------------------------------------------------------------------"
+basename -a `ls $YamlDir/*CAPI*$Choice*.yaml`
+echo
+echo "please give the alternative one that you may want, or leave empty if you want to use `basename $YamlFile`:"
+echo -e "?: \c"
+read YamlFileOther
 
 if [ "$YamlFileOther" != "" ]; then
   YamlFile=$YamlDir/$YamlFileOther
