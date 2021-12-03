@@ -1,7 +1,39 @@
 #!/bin/bash
 
-Dir=`ls -d /OCXLSys/devices/pci*/*.1/ocxlfn*.1/ocxl`
+Card=""
 
-echo "LIBOCXL_SYSPATH=$Dir LD_LIBRARY_PATH=/opt/libocxl/obj:$LD_LIBRARY_PATH  /opt/oc-accel/software/tools/oc_maint -v $*"
-LIBOCXL_SYSPATH=$Dir LD_LIBRARY_PATH=/opt/libocxl/obj:$LD_LIBRARY_PATH  /opt/oc-accel/software/tools/oc_maint -v $*
+while getopts "C:" option; do
+  case $option in
+    C)
+      Card=$OPTARG
+      echo "Card= $Card"
+    ;;
+  esac
+done
+
+Dir=`ls -d /OCXLSys/devices/pci*/*.1/ocxlfn*.1/ocxl 2>/dev/null` # Example: /OCXLSys/devices/pci0004:00/0004:00:00.1/ocxlfn.0004:00:00.1/ocxl
+
+DirCount=`echo $Dir | wc -w`
+
+if [ $DirCount -ne 0 ]; then
+
+  if [[ $DirCount -eq 1 || ( $# -ne 0  &&  "$*" =~ "-C" ) ]]; then
+
+    DirCard=$Dir
+    for i in $Dir; do
+      temp=`dirname $i`
+      if [ "$Card" != "" ] && [[ "`basename $temp`" =~ "$Card" ]]; then DirCard=$i; fi
+    done
+
+    echo "LIBOCXL_SYSPATH=$DirCard LD_LIBRARY_PATH=/opt/libocxl/obj:$LD_LIBRARY_PATH  /opt/oc-accel/software/tools/oc_maint -v $*"
+    LIBOCXL_SYSPATH=$DirCard LD_LIBRARY_PATH=/opt/libocxl/obj:$LD_LIBRARY_PATH /opt/oc-accel/software/tools/oc_maint -v $*
+
+  else
+    echo "More than one OpenCAPI card detected. Please choose one card with the \"-C\" option (run \"my_oc_find_card\" tool to get the card position)"
+   for i in $Dir; do echo "  $i"; done
+  fi
+
+else
+  echo "No OpenCAPI Card detected"
+fi
 
