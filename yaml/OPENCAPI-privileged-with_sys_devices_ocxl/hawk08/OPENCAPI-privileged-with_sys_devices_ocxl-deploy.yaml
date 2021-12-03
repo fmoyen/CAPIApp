@@ -31,6 +31,10 @@ spec:
           volumeMounts:
             - name: sys-ocxl
               mountPath: /OCXLSys
+            - name: lib-modules-ocxl
+              mountPath: /lib/modules
+            - name: images-ad9h3
+              mountPath: /images/ad9h3
           securityContext:
             privileged: true
       restartPolicy: Always
@@ -44,6 +48,12 @@ spec:
         - name: sys-ocxl
           persistentVolumeClaim:
             claimName: sys-ocxl-pvc
+        - name: lib-modules-ocxl
+          persistentVolumeClaim:
+            claimName: lib-modules-ocxl-pvc
+        - name: images-ad9h3
+          persistentVolumeClaim:
+            claimName: images-ad9h3-pvc
   strategy:
     type: RollingUpdate
     rollingUpdate:

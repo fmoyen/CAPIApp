@@ -6,7 +6,6 @@ while getopts "C:" option; do
   case $option in
     C)
       Card=$OPTARG
-      echo "Card= $Card"
     ;;
   esac
 done
