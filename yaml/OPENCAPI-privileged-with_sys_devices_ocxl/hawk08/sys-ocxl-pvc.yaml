@@ -1,7 +1,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: sys-devices-ocxl-pvc
+  name: sys-ocxl-pvc
   namespace: fabriceproject
 spec:
   accessModes:
@@ -10,4 +10,4 @@ spec:
   resources:
     requests:
       storage: 1Gi 
-  storageClassName: sys-devices-ocxl-storageclass 
+  storageClassName: sys-ocxl-storageclass 

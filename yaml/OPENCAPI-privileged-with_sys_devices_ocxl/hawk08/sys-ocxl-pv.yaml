@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: sys-devices-ocxl-pv
+  name: sys-ocxl-pv
 spec:
   capacity:
     storage: 1Gi
@@ -9,9 +9,9 @@ spec:
   accessModes:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: sys-devices-ocxl-storageclass 
+  storageClassName: sys-ocxl-storageclass 
   local:
-    path: /sys/devices
+    path: /sys
   nodeAffinity:
     required:
       nodeSelectorTerms:
