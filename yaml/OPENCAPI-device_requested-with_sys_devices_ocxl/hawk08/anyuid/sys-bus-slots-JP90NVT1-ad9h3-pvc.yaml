@@ -1,7 +1,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: sys-bus-ocxl-ad9h3-pvc
+  name: sys-bus-slots-jp90nvt1-pvc
   namespace: fabriceproject
 spec:
   accessModes:
@@ -10,4 +10,4 @@ spec:
   resources:
     requests:
       storage: 1Gi 
-  storageClassName: sys-bus-ocxl-ad9h3-storageclass 
+  storageClassName: sys-bus-slots-jp90nvt1-storageclass 

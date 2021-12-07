@@ -36,6 +36,8 @@ spec:
               mountPath: /OCXLSys/devices/pci0004:00/0004:00:00.1
             - name: sys-bus-ocxl1-ad9h3
               mountPath: /OCXLSys/bus/pci/devices/0004:00:00.1
+            - name: sys-bus-slots-jp90nvt1
+              mountPath: /OCXLSys/bus/pci/slots/JP90NVT1
             - name: lib-modules-ocxl
               mountPath: /lib/modules
             - name: images-ad9h3
@@ -59,6 +61,9 @@ spec:
         - name: sys-bus-ocxl1-ad9h3
           persistentVolumeClaim:
             claimName: sys-bus-ocxl.1-ad9h3-pvc
+        - name: sys-bus-slots-jp90nvt1
+          persistentVolumeClaim:
+            claimName: sys-bus-slots-jp90nvt1-pvc
         - name: lib-modules-ocxl
           persistentVolumeClaim:
             claimName: lib-modules-ocxl-pvc

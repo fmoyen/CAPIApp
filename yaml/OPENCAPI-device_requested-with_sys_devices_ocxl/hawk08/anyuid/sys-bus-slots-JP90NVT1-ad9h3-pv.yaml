@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: sys-bus-ocxl-ad9h3-pv
+  name: sys-bus-slots-jp90nvt1-pv
 spec:
   capacity:
     storage: 1Gi
@@ -9,9 +9,9 @@ spec:
   accessModes:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: sys-bus-ocxl-ad9h3-storageclass 
+  storageClassName: sys-bus-slots-jp90nvt1-storageclass 
   local:
-    path: /sys/bus/pci/devices/0004:00:00.0
+    path: /sys/bus/pci/slots/JP90NVT1
   nodeAffinity:
     required:
       nodeSelectorTerms:
