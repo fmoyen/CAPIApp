@@ -65,32 +65,32 @@ if `echo $CardChoice | grep -q ocapi`; then
 
   YamlDir=$YamlRootDir/$SubDir
 
-  YamlFile=`ls $YamlDir/OPENCAPI-*${Choice}*deploy.yaml`
+  YamlFile=`ls $YamlDir/OPENCAPI-*${Choice}*deploy.yaml 2>/dev/null`
 
-  OCXL0_Devices_PvYamlFile=`ls $YamlDir/sys-devices-ocxl.0-*${Choice}*pv.yaml`
-  OCXL0_Devices_PvcYamlFile=`ls $YamlDir/sys-devices-ocxl.0-*${Choice}*pvc.yaml`
-  OCXL0_Bus_PvYamlFile=`ls $YamlDir/sys-bus-ocxl.0-*${Choice}*pv.yaml`
-  OCXL0_Bus_PvcYamlFile=`ls $YamlDir/sys-bus-ocxl.0-*${Choice}*pvc.yaml`
+  OCXL0_Devices_PvYamlFile=`ls $YamlDir/sys-devices-ocxl.0-*${Choice}*pv.yaml 2>/dev/null`
+  OCXL0_Devices_PvcYamlFile=`ls $YamlDir/sys-devices-ocxl.0-*${Choice}*pvc.yaml 2>/dev/null`
+  OCXL0_Bus_PvYamlFile=`ls $YamlDir/sys-bus-ocxl.0-*${Choice}*pv.yaml 2>/dev/null`
+  OCXL0_Bus_PvcYamlFile=`ls $YamlDir/sys-bus-ocxl.0-*${Choice}*pvc.yaml 2>/dev/null`
 
-  OCXL1_Devices_PvYamlFile=`ls $YamlDir/sys-devices-ocxl.1-*${Choice}*pv.yaml`
-  OCXL1_Devices_PvcYamlFile=`ls $YamlDir/sys-devices-ocxl.1-*${Choice}*pvc.yaml`
-  OCXL1_Bus_PvYamlFile=`ls $YamlDir/sys-bus-ocxl.1-*${Choice}*pv.yaml`
-  OCXL1_Bus_PvcYamlFile=`ls $YamlDir/sys-bus-ocxl.1-*${Choice}*pvc.yaml`
+  OCXL1_Devices_PvYamlFile=`ls $YamlDir/sys-devices-ocxl.1-*${Choice}*pv.yaml 2>/dev/null`
+  OCXL1_Devices_PvcYamlFile=`ls $YamlDir/sys-devices-ocxl.1-*${Choice}*pvc.yaml 2>/dev/null`
+  OCXL1_Bus_PvYamlFile=`ls $YamlDir/sys-bus-ocxl.1-*${Choice}*pv.yaml 2>/dev/null`
+  OCXL1_Bus_PvcYamlFile=`ls $YamlDir/sys-bus-ocxl.1-*${Choice}*pvc.yaml 2>/dev/null`
 
-  Devices_Pci_PvYamlFile=`ls $YamlDir/sys-devices-pci-*${Choice}*pv.yaml`
-  Devices_Pci_PvcYamlFile=`ls $YamlDir/sys-devices-pci-*${Choice}*pvc.yaml`
+  Devices_Pci_PvYamlFile=`ls $YamlDir/sys-devices-pci-*${Choice}*pv.yaml 2>/dev/null`
+  Devices_Pci_PvcYamlFile=`ls $YamlDir/sys-devices-pci-*${Choice}*pvc.yaml 2>/dev/null`
 
-  Slots_PhySlot_PvYamlFile=`ls $YamlDir/sys-bus-slots-*${Choice}*pv.yaml`
-  Slots_PhySlot_PvcYamlFile=`ls $YamlDir/sys-bus-slots-*${Choice}*pvc.yaml`
+  Slots_PhySlot_PvYamlFile=`ls $YamlDir/sys-bus-slots-*${Choice}*pv.yaml 2>/dev/null`
+  Slots_PhySlot_PvcYamlFile=`ls $YamlDir/sys-bus-slots-*${Choice}*pvc.yaml 2>/dev/null`
 
-  ImagesDevice_PvYamlFile=`ls $YamlDir/images-${Choice}-pv.yaml`
-  ImagesDevice_PvcYamlFile=`ls $YamlDir/images-${Choice}-pvc.yaml`
+  ImagesDevice_PvYamlFile=`ls $YamlDir/images-${Choice}-pv.yaml 2>/dev/null`
+  ImagesDevice_PvcYamlFile=`ls $YamlDir/images-${Choice}-pvc.yaml 2>/dev/null`
 
 # CAPI CASE
 else
   CardType="Capi"
   YamlDir="CAPI-device-requested/$Node"
-  YamlFile=`ls $YamlDir/CAPI-device*${Choice}*deploy.yaml`
+  YamlFile=`ls $YamlDir/CAPI-device*${Choice}*deploy.yaml 2>/dev/null`
 fi
 
 echo
