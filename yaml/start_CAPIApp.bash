@@ -11,10 +11,13 @@ OCXL0_BusPvYamlFile=""
 OCXL0_BusPvcYamlFile=""
 OCXL1_BusPvYamlFile=""
 OCXL1_BusPvcYamlFile=""
+Devices_Pci_PvYamlFile=""
+Devices_Pci_PvcYamlFile=""
 ImagesDevicePvYamlFile=""
 ImagesDevicePvcYamlFile=""
 Slots_PhySlotPvYamlFile=""
 Slots_PhySlotPvcYamlFile=""
+OCXL0_BusPvcYamlFile=""
 OCYamlFile=""
 YamlRootDir=""
 SubDir="nul"
@@ -74,6 +77,9 @@ if `echo $CardChoice | grep -q ocapi`; then
   OCXL1_BusPvYamlFile=`ls $YamlDir/sys-bus-ocxl.1-*${Choice}*pv.yaml`
   OCXL1_BusPvcYamlFile=`ls $YamlDir/sys-bus-ocxl.1-*${Choice}*pvc.yaml`
 
+  Devices_Pci_PvYamlFile=`ls $YamlDir/sys-devices-pci-*${Choice}*pv.yaml`
+  Devices_Pci_PvcYamlFile=`ls $YamlDir/sys-devices-pci-*${Choice}*pvc.yaml`
+
   Slots_PhySlotPvYamlFile=`ls $YamlDir/sys-bus-slots-*${Choice}*pv.yaml`
   Slots_PhySlotPvcYamlFile=`ls $YamlDir/sys-bus-slots-*${Choice}*pvc.yaml`
 
@@ -103,6 +109,8 @@ echo "  ocxl.0 /sys/bus PV creation (if needed):          `basename $OCXL0_BusPv
 echo "  ocxl.0 /sys/bus PVC creation (if needed):         `basename $OCXL0_BusPvcYamlFile 2>/dev/null`"
 echo "  ocxl.1 /sys/bus PV creation (if needed):          `basename $OCXL1_BusPvYamlFile 2>/dev/null`"
 echo "  ocxl.1 /sys/bus PVC creation (if needed):         `basename $OCXL1_BusPvcYamlFile 2>/dev/null`"
+echo "  /sys/devices/pci PV creation (if needed):         `basename $Devices_Pci_PvYamlFile 2>/dev/null`"
+echo "  /sys/devices/pci PVC creation (if needed):        `basename $Devices_Pci_PvcYamlFile 2>/dev/null`"
 echo "  /sys/bus/slots PhySlot PV creation (if needed):   `basename $Slots_PhySlotPvYamlFile 2>/dev/null`"
 echo "  /sys/bus/slots PhySlot PVC creation (if needed):  `basename $Slots_PhySlotPvcYamlFile 2>/dev/null`"
 echo "  Binary Image PV creation (if needed):             `basename $ImagesDevicePvYamlFile 2>/dev/null`"
@@ -129,7 +137,7 @@ fi
 echo
 echo "starting the CAPIapp:"
 echo "---------------------"
-for i in $OCXL0_DevicesPvYamlFile $OCXL0_DevicesPvcYamlFile $OCXL0_BusPvYamlFile $OCXL0_BusPvcYamlFile $OCXL1_DevicesPvYamlFile $OCXL1_DevicesPvcYamlFile $OCXL1_BusPvYamlFile $OCXL1_BusPvcYamlFile $Slots_PhySlotPvYamlFile $Slots_PhySlotPvcYamlFile $ImagesDevicePvYamlFile $ImagesDevicePvcYamlFile $YamlFile; do
+for i in $OCXL0_DevicesPvYamlFile $OCXL0_DevicesPvcYamlFile $OCXL0_BusPvYamlFile $OCXL0_BusPvcYamlFile $OCXL1_DevicesPvYamlFile $OCXL1_DevicesPvcYamlFile $Devices_Pci_PvYamlFile $Devices_Pci_PvcYamlFile $OCXL1_BusPvYamlFile $OCXL1_BusPvcYamlFile $Slots_PhySlotPvYamlFile $Slots_PhySlotPvcYamlFile $ImagesDevicePvYamlFile $ImagesDevicePvcYamlFile $YamlFile; do
   echo 
   echo "oc create -f $i"
   oc create -f $i

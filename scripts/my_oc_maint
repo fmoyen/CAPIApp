@@ -10,7 +10,7 @@ while getopts "C:" option; do
   esac
 done
 
-Dir=`ls -d /OCXLSys/devices/pci*/*.1/ocxlfn*.1/ocxl 2>/dev/null` # Example: /OCXLSys/devices/pci0004:00/0004:00:00.1/ocxlfn.0004:00:00.1/ocxl
+Dir=`ls -d /sys/devices/pci*/*.1/ocxlfn*.1/ocxl 2>/dev/null` # Example: /sys/devices/pci0004:00/0004:00:00.1/ocxlfn.0004:00:00.1/ocxl
 
 DirCount=`echo $Dir | wc -w`
 
