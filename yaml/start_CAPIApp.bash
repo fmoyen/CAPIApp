@@ -28,6 +28,7 @@ echo
 echo "List of CAPI/OpenCAPI cards seen by the Device Plugin on $Node:"
 echo "----------------------------------------------------------------"
 oc describe node $Node | sed -n '/Capacity:/,/Allocatable/p' | grep xilinx | tee $TempFile
+trap "rm $TempFile" EXIT
 echo
 echo "List of CAPI/OpenCAPI cards requests / limts on $Node:"
 echo "-------------------------------------------------------"
@@ -140,7 +141,14 @@ echo "---------------------"
 for i in $OCXL0_Devices_PvYamlFile $OCXL0_Devices_PvcYamlFile $OCXL0_Bus_PvYamlFile $OCXL0_Bus_PvcYamlFile $OCXL1_Devices_PvYamlFile $OCXL1_Devices_PvcYamlFile $Devices_Pci_PvYamlFile $Devices_Pci_PvcYamlFile $OCXL1_Bus_PvYamlFile $OCXL1_Bus_PvcYamlFile $Slots_PhySlot_PvYamlFile $Slots_PhySlot_PvcYamlFile $ImagesDevice_PvYamlFile $ImagesDevice_PvcYamlFile $YamlFile; do
   echo 
   echo "oc create -f $i"
-  oc create -f $i
+  if ! oc create -f $i 2> $TempFile; then
+    if grep -q "already exists" $TempFile; then
+      echo "  --> already exists"
+    else
+      cat $TempFile
+    fi
+  fi
+
   echo 
 done
 
