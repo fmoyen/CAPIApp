@@ -82,8 +82,8 @@ if `echo $CardChoice | grep -q ocapi`; then
   OCXL1_Bus_PvYamlFile=`ls $YamlDir/sys-bus-ocxl.1-*${Choice}*pv.yaml 2>/dev/null`
   OCXL1_Bus_PvcYamlFile=`ls $YamlDir/sys-bus-ocxl.1-*${Choice}*pvc.yaml 2>/dev/null`
 
-  OCXL_lib_Modules_PvYamlFile=`ls $YamlDir/lib-modules-pv.yaml 2>/dev/null`
-  OCXL_lib_Modules_PvcYamlFile=`ls $YamlDir/lib-modules-pvc.yaml 2>/dev/null`
+  OCXL_Lib_Modules_PvYamlFile=`ls $YamlDir/lib-modules-pv.yaml 2>/dev/null`
+  OCXL_Lib_Modules_PvcYamlFile=`ls $YamlDir/lib-modules-pvc.yaml 2>/dev/null`
 
   Devices_Pci_PvYamlFile=`ls $YamlDir/sys-devices-pci-*${Choice}*pv.yaml 2>/dev/null`
   Devices_Pci_PvcYamlFile=`ls $YamlDir/sys-devices-pci-*${Choice}*pvc.yaml 2>/dev/null`
