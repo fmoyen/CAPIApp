@@ -15,6 +15,26 @@ Different directories here for testing:
 => sys_anyuid vs anyuid: I've validated with Fred Barrat we will always have only one card under /sys/devices/pci0004:00 (even if theorically it is possible to have more than one) 
    So it is possible to just mount /sys/devices/pci0004:00 instead of precisely mount /sys/devices/pci0004:00/0004:00:00.0 and /sys/devices/pci0004:00/0004:00:00.1 directories
 
+0004:00:00.1 = domain : bus : device . function
+pci0004:00 = domain : bus
+
+In theory, you may have up to:
+ - 256 bus per domain
+ - 32 devices per bus
+  - 8 functions per device
+
+So up to 32 devices for pci0004:00
+
+0004 is the PCI host bridge ID.
+
+For OpenCAPI devices: 
+  - This pci0004 PCI host bridge is virtual. 
+  - Only one bus and one device (so 00:00) per domain/virtual PCI host bridge. So only one OpenCAPI card per domain pci000X.
+
+Warning: That is the reality for OpenCAPI today. This could potentially change in the future, for example if we finally get a card with 2 OpenCAPI attachments, but this is unlikely to happen in the future.
+Even though, it has not yet been decided if we'll have two virtual PCI host bridges (one per OpenCAPI attachment) in such situation or only one virtual PCI host bridge (as it is only one card with 2 OpenCAPI attachments).
+
+
 ==============================================================================================================================================================================
 Inside view:
 
