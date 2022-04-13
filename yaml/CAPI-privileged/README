@@ -1,2 +1,5 @@
 Warning:
 This is the CAPIapp with full privilege, so working but unacceptable for production-like environment.
+
+Note:
+You need to define the fabriceproject-service-account service account with SCC privileged authorization.

@@ -1,0 +1,99 @@
+==============================================================================================================================================================================
+Different directories here for testing:
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  - ad9h3: ad9h3 images mounted +  ad9h3 global_mmio_area directory mounted on /OCXLSysDevice
+  - ad9h7: ad9h7 images mounted +  ad9h7 global_mmio_area directory mounted on /OCXLSysDevice
+
+=> These mounts are not enough for configuring the card
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  - anyuid: ad9h3 images mounted + /lib/modules mounted + ad9h3 /sys/bus/pci mounted on /OCXLSys + ad9h3 /sys/devices/ mounted on /OCXLSys + ad9h3 JP90NVT1 slot mounted on /OCXLSys
+  - sys_anyuid: ad9h3 images mounted + /lib/modules mounted + ad9h3 /sys/devices/ mounted on /sys + ad9h3 JP90NVT1 slot mounted on /sys
+
+=> sys_anyuid vs anyuid: It looks like you can RW-overmount the directory you're interested in directly inside /sys
+   Do we still need a container-modified libocxl ?
+
+=> sys_anyuid vs anyuid: I've validated with Fred Barrat we will always have only one card under /sys/devices/pci0004:00 (even if theorically it is possible to have more than one) 
+   So it is possible to just mount /sys/devices/pci0004:00 instead of precisely mount /sys/devices/pci0004:00/0004:00:00.0 and /sys/devices/pci0004:00/0004:00:00.1 directories
+
+PCI details:
+------------
+0004:00:00.1 = domain : bus : device . function
+pci0004:00 = domain : bus
+
+In theory, you may have up to:
+ - 256 bus per domain
+ - 32 devices per bus
+  - 8 functions per device
+
+So up to 32 devices for pci0004:00
+
+0004 is the PCI host bridge ID.
+
+For OpenCAPI devices: 
+  - This pci0004 PCI host bridge is virtual. 
+  - Only one bus and one device (so 00:00) per domain/virtual PCI host bridge. So only one OpenCAPI card per domain pci000X.
+
+Warning:
+--------
+That is the reality for OpenCAPI today. This could potentially change in the future, for example if we finally get a card with 2 OpenCAPI attachments, but this is unlikely to happen in the future.
+Even though, it has not yet been decided if we'll have two virtual PCI host bridges (one per OpenCAPI attachment) in such situation or only one virtual PCI host bridge (as it is only one card with 2 OpenCAPI attachments).
+
+
+==============================================================================================================================================================================
+YAML files definition:
+
+[root@ocp2helper hawk08]# for i in `ls -d *`; do echo "##########################"; echo $i; grep path $i/*pv.yaml; grep mountPath $i/OPEN*.yaml; echo; done
+
+##########################
+ad9h3
+ad9h3/images-ad9h3-pv.yaml:    path: /export/Images/ad9h3
+ad9h3/sys-devices-ocxl-ad9h3-pv.yaml:    path: /sys/devices/pci0004:00/0004:00:00.1/ocxlfn.0004:00:00.1/ocxl
+              mountPath: /OCXLSysDevice
+              mountPath: /images/ad9h3
+
+##########################
+ad9h7
+ad9h7/images-ad9h7-pv.yaml:    path: /export/Images/ad9h7
+ad9h7/sys-devices-ocxl-ad9h7-pv.yaml:    path: /sys/devices/pci0006:00/0006:00:00.1/ocxlfn.0006:00:00.1/ocxl
+              mountPath: /OCXLSysDevice
+              mountPath: /images/ad9h7
+
+##########################
+anyuid
+anyuid/images-ad9h3-pv.yaml:    path: /export/Images/ad9h3
+anyuid/lib-modules-pv.yaml:    path: /lib/modules
+anyuid/sys-bus-ocxl.0-ad9h3-pv.yaml:    path: /sys/bus/pci/devices/0004:00:00.0
+anyuid/sys-bus-ocxl.1-ad9h3-pv.yaml:    path: /sys/bus/pci/devices/0004:00:00.1
+anyuid/sys-bus-slots-JP90NVT1-ad9h3-pv.yaml:    path: /sys/bus/pci/slots/JP90NVT1
+anyuid/sys-devices-ocxl.0-ad9h3-pv.yaml:    path: /sys/devices/pci0004:00/0004:00:00.0
+anyuid/sys-devices-ocxl.1-ad9h3-pv.yaml:    path: /sys/devices/pci0004:00/0004:00:00.1
+              mountPath: /OCXLSys/devices/pci0004:00/0004:00:00.0
+              mountPath: /OCXLSys/bus/pci/devices/0004:00:00.0
+              mountPath: /OCXLSys/devices/pci0004:00/0004:00:00.1
+              mountPath: /OCXLSys/bus/pci/devices/0004:00:00.1
+              mountPath: /OCXLSys/bus/pci/slots/JP90NVT1
+              mountPath: /lib/modules
+              mountPath: /images/ad9h3
+
+##########################
+sys_anyuid
+sys_anyuid/images-ad9h3-pv.yaml:    path: /export/Images/ad9h3
+sys_anyuid/lib-modules-pv.yaml:    path: /lib/modules
+sys_anyuid/sys-bus-slots-JP90NVT1-ad9h3-pv.yaml:    path: /sys/bus/pci/slots/JP90NVT1
+sys_anyuid/sys-devices-pci-ad9h3-pv.yaml:    path: /sys/devices/pci0004:00
+              mountPath: /sys/devices/pci0004:00
+              mountPath: /sys/bus/pci/slots/JP90NVT1
+              mountPath: /lib/modules
+              mountPath: /images/ad9h3
+
+
+==============================================================================================================================================================================
+sys_anyuid POD tells you:
+
+sh-4.4$ mount | grep sys | grep sysfs 
+sysfs on /sys type sysfs (ro,nosuid,nodev,noexec,relatime,seclabel)
+sysfs on /sys/devices/pci0004:00 type sysfs (rw,relatime,seclabel)
+sysfs on /sys/bus/pci/slots/JP90NVT1 type sysfs (rw,relatime,seclabel)
+

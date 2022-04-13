@@ -1,7 +1,7 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: oc-ad9h3-anyuid
+  name: oc-ad9h3-sysanyuid
   namespace: fabriceproject
   labels:
     app: oc-ad9h3
