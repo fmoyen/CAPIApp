@@ -21,6 +21,8 @@ WORKDIR /opt/snap
 RUN make software
 
 WORKDIR /opt/oc-accel
+RUN git fetch
+RUN git checkout mmio_partial_reconfig
 RUN make software
 
 WORKDIR /opt/oc-utils

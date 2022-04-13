@@ -6,6 +6,7 @@ Develop / test a way to use a CAPI adapter in an Openshift App environment.
 (this will make the container staying alive)
 
 ## For generating the docker hub CAPIapp images, run the following script: Build-capiapp.sh
+On a Linux on Power system with the development tools installed
 The Build-capiapp.sh script is here to generate the capiapp (thanks to the Dockerfile) and push it into docker hub.
 
 The script is now using the https://github.com/OpenCAPI/libocxl master branch as it is now compatible with containers thanks to following commit:
