@@ -41,6 +41,8 @@ COPY scripts/my_oc_maint_verbose /usr/local/bin
 COPY scripts/my_snap_find_card /usr/local/bin
 COPY scripts/my_snap_maint /usr/local/bin
 
+RUN ln -s /opt/oc-accel/software/tools/oc_action_reprogram /usr/bin/oc_action_reprogram
+
 COPY StayUp.bash /usr/local/bin
 #USER fabrice
 #WORKDIR /home/fabrice
