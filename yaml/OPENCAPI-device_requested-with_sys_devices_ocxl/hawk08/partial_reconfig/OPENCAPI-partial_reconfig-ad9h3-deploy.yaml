@@ -32,8 +32,6 @@ spec:
               mountPath: /sys/devices/pci0004:00
             - name: images-ad9h3
               mountPath: /images/ad9h3
-          securityContext:
-            anyuid: true
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
