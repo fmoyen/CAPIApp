@@ -40,6 +40,18 @@ Warning:
 That is the reality for OpenCAPI today. This could potentially change in the future, for example if we finally get a card with 2 OpenCAPI attachments, but this is unlikely to happen in the future.
 Even though, it has not yet been decided if we'll have two virtual PCI host bridges (one per OpenCAPI attachment) in such situation or only one virtual PCI host bridge (as it is only one card with 2 OpenCAPI attachments).
 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  - partial_reconfig: ad9h3 images mounted +  ad9h3 global_mmio_area directory RW-mounted on /sys
+
+This directory has been made to work with:
+  CAPIApp docker image tagged "V42_mmio_partial_reconfig"
+  built thanks to gitlab CAPIApp commit n° c75f97f2 "Using mmio_partial_reconfig oc-accel branch (Bruno)"
+  using github oc-accel "mmio_partial_reconfig" Bruno's branch
+
+=> It's working (oc_find_card, oc_maint, oc_action_reprogram) fine with partial reconfiguration and with only RW-mounting:
+   /sys/devices/pci0004:00
+   /images/ad9h3 
+
 
 ==============================================================================================================================================================================
 YAML files definition:
