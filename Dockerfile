@@ -30,11 +30,6 @@ RUN git fetch
 RUN git checkout container
 RUN make install
 
-RUN groupadd -g 1000 fabrice
-RUN useradd -ms /bin/bash fabrice -u 1000 -g fabrice
-RUN echo "fabrice:fabpasswd" | chpasswd
-RUN echo "fabrice        ALL=(ALL)       NOPASSWD: ALL" | EDITOR='tee' visudo -f /etc/sudoers.d/specialUsers
-
 COPY scripts/my_oc_find_card /usr/local/bin
 COPY scripts/my_oc_maint /usr/local/bin
 COPY scripts/my_oc_maint_verbose /usr/local/bin
@@ -44,7 +39,5 @@ COPY scripts/my_snap_maint /usr/local/bin
 RUN ln -s /opt/oc-accel/software/tools/oc_action_reprogram /usr/bin/oc_action_reprogram
 
 COPY StayUp.bash /usr/local/bin
-#USER fabrice
-#WORKDIR /home/fabrice
 CMD /usr/local/bin/StayUp.bash 
 
