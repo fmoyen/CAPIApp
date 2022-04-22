@@ -1,4 +1,4 @@
-FROM quay.io/centos/centos:latest
+FROM quay.io/centos/centos:stream8
 
 RUN yum install -y langpacks-en glibc-all-langpacks
 RUN yum upgrade -y
@@ -10,6 +10,9 @@ RUN yum install -y libcxl-devel libocxl-devel
 RUN yum install -y git sudo
 RUN yum groupinstall -y "Development Tools"
 RUN yum install -y pciutils
+
+#RUN yum install -y openssh-server
+#RUN systemctl start sshd
 
 WORKDIR /opt
 RUN git clone https://github.com/open-power/snap.git
