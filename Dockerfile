@@ -3,16 +3,13 @@ FROM quay.io/centos/centos:stream8
 RUN dnf install -y langpacks-en glibc-all-langpacks
 RUN dnf upgrade -y
 
-RUN dnf install -y dnf-utils
+RUN dnf install -y yum-utils
+RUN dnf install -y iputils iproute
 RUN dnf config-manager --set-enabled powertools
 RUN dnf install -y libcxl-devel libocxl-devel
 
-RUN dnf install -y git sudo
 RUN dnf groupinstall -y "Development Tools"
 RUN dnf install -y pciutils
-
-#RUN dnf install -y openssh-server
-#RUN systemctl start sshd
 
 WORKDIR /opt
 RUN git clone https://github.com/open-power/snap.git
