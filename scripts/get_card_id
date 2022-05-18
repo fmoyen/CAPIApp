@@ -1,0 +1,14 @@
+#!/bin/bash
+
+unset ID
+
+for i in 0 2 4;do
+#for i in `/opt/oc-accel/software/tools/oc_find_card -AALL | head -1`;do
+  my_oc_maint -C$i >/dev/null 2>&1
+  if [[ $? -eq 0 ]]; then 
+    ID=$i
+    echo "Your OpenCAPI card has the ID = $i"
+  fi
+done
+
+[ -z "${ID+x}" ] && echo "You do not have any OpenCAPI card"
