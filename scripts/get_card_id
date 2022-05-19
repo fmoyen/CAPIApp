@@ -1,14 +1,22 @@
 #!/bin/bash
 
 unset ID
+count=0
+allIDs=`/opt/oc-accel/software/tools/oc_find_card -AALL | head -1`
 
-for i in 0 2 4;do
-#for i in `/opt/oc-accel/software/tools/oc_find_card -AALL | head -1`;do
-  my_oc_maint -C$i >/dev/null 2>&1
-  if [[ $? -eq 0 ]]; then 
-    ID=$i
-    echo "Your OpenCAPI card has the ID = $i"
+for i in `echo $allIDs`;do
+  IsOpenCAPI=0
+  /opt/oc-accel/software/tools/oc_find_card -AALL -C$i -t3 > /dev/null || IsOpenCAPI=1 #oc_find_card RC=1 if an OpenCAPI (-t3) card has been found and 0 otherwise !
+  if [[ $IsOpenCAPI -eq 1 ]]; then
+    /opt/oc-accel/software/tools/oc_maint -C$i >/dev/null 2>&1
+    if [[ $? -eq 0 ]]; then # oc_maint works fine meaning the directory of global_mmio_area is RW-mounted (card allocated to the pod)
+      ID=$i
+      echo $i
+      count=$((count+1))
+    fi
   fi
 done
 
-[ -z "${ID+x}" ] && echo "You do not have any OpenCAPI card"
+# Cases something wrong happened
+[ -z "${ID+x}" ] && exit 66 # no OpenCAPI card allocated
+[ $count -ne 1 ] && exit $count # more than one OpenCAPI card allocated

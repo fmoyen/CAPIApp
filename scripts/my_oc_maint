@@ -11,28 +11,31 @@ while getopts "C:" option; do
 done
 
 Dir=`ls -d /sys/devices/pci*/*.1/ocxlfn*.1/ocxl 2>/dev/null` # Example: /sys/devices/pci0004:00/0004:00:00.1/ocxlfn.0004:00:00.1/ocxl
-
 DirCount=`echo $Dir | wc -w`
+IDs=`/usr/local/bin/get_card_id`
+IDsCount=`echo $IDs | wc -w`
 
-if [ $DirCount -ne 0 ]; then
+if [ $IDsCount -eq 0 ]; then
+  echo "No OpenCAPI Card detected"
+  exit 66
+fi
 
-  if [[ $DirCount -eq 1 || ( $# -ne 0  &&  "$*" =~ "-C" ) ]]; then
-
-    DirCard=$Dir
-    for i in $Dir; do
-      temp=`dirname $i`
-      if [ "$Card" != "" ] && [[ "`basename $temp`" =~ "$Card" ]]; then DirCard=$i; fi
-    done
-
+if [ $IDsCount -eq 1 ]; then
+  if [[ $# -ne 0  &&  "$*" =~ "-C" ]]; then
     echo "/opt/oc-accel/software/tools/oc_maint -v $*"
     /opt/oc-accel/software/tools/oc_maint -v $*
-
   else
-    echo "More than one OpenCAPI card detected. Please choose one card with the \"-C\" option (run \"my_oc_find_card\" tool to get the card position)"
-   for i in $Dir; do echo "  $i"; done
+    echo "/opt/oc-accel/software/tools/oc_maint -v -C$IDs $*"
+    /opt/oc-accel/software/tools/oc_maint -v -C$IDs $*
   fi
 
 else
-  echo "No OpenCAPI Card detected"
+  if [[ $# -ne 0  &&  "$*" =~ "-C" ]]; then
+    echo "/opt/oc-accel/software/tools/oc_maint -v $*"
+    /opt/oc-accel/software/tools/oc_maint -v $*
+  else
+    echo "More than one OpenCAPI card detected. Please choose one card with the \"-C\" option (run \"my_oc_find_card\" tool to get the card position)"
+    echo -e "Card positions found: \c"
+    echo $IDs
+  fi
 fi
-

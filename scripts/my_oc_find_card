@@ -1,3 +1,15 @@
 #!/bin/bash
-echo "/opt/oc-accel/software/tools/oc_find_card -AALL -v $*"
-/opt/oc-accel/software/tools/oc_find_card -AALL -v $*
+
+# Getting the OpenCAPI cards allocated
+IDs=`/usr/local/bin/get_card_id`
+
+# no OpenCAPI card allocated => exiting
+if [[ "$IDs" = "" ]]; then
+	  echo "No OpenCAPI card allocated found"
+	    exit 66
+fi
+
+#oc_find_card of the only OpenCAPI cards allocated
+for i in $IDs; do
+	  /opt/oc-accel/software/tools/oc_find_card -v -AALL | grep "position: $i" -A6
+  done
