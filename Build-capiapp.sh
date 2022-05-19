@@ -45,35 +45,6 @@ if [[ -z $docker_tag ]]; then
    exit 1
 fi
 
-#echo; echo "========================================================"
-#echo "cloning the libocxl github master branch into /tmp"
-#echo "(cd /tmp; git clone $libocxl_github)"
-#rm -rf /tmp/libocxl
-#cd /tmp
-#git clone $libocxl_github
-
-#echo; echo "========================================================"
-#echo "Compiling the libocxl library"
-#echo "(cd /tmp/libocxl; make)"
-#cd /tmp/libocxl
-#make
-#echo
-#ls -la obj
-
-#echo; echo "========================================================"
-#echo "Generate the $libocxl_tar_name file and push it into $ScriptDir"
-#cd /tmp
-#tar cvzf $libocxl_tar_name libocxl
-#if [ $? -ne 0 ]; then
-   #echo "$libocxl_tar_name ganaration has failed ! Stopping here..."
-   #echo
-   #exit 1
-#fi  
-
-#rm -f $ScriptDir/$libocxl_tar_name
-#mv $libocxl_tar_name $ScriptDir
-#rm -rf /tmp/libocxl
-
 echo; echo "========================================================"
 echo "Generating the docker image ${docker_repository}:$docker_tag"
 cd $ScriptDir
