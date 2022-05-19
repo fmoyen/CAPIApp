@@ -15,7 +15,7 @@ WORKDIR /opt
 RUN git clone https://github.com/open-power/snap.git
 RUN git clone https://github.com/OpenCAPI/oc-accel.git
 RUN git clone https://github.com/OpenCAPI/oc-utils.git
-ADD libocxl_for_containers.tar.gz .
+#ADD libocxl_for_containers.tar.gz .
 
 WORKDIR /opt/snap
 RUN make software
