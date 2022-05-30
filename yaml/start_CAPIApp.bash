@@ -72,7 +72,7 @@ if `echo $CardChoice | grep -q ocapi`; then
 
   YamlDir=$YamlRootDir/$SubDir
 
-  YamlFile=`ls $YamlDir/OPENCAPI-*${Choice}*deploy.yaml 2>/dev/null`
+  YamlFile=`ls $YamlDir/OPENCAPI-*${Choice}*deploy.yaml 2>/dev/null | head -1`
 
   OCXL0_Devices_PvYamlFile=`ls $YamlDir/sys-devices-ocxl.0-*${Choice}*pv.yaml 2>/dev/null`
   OCXL0_Devices_PvcYamlFile=`ls $YamlDir/sys-devices-ocxl.0-*${Choice}*pvc.yaml 2>/dev/null`
@@ -104,7 +104,7 @@ if `echo $CardChoice | grep -q ocapi`; then
 else
   CardType="Capi"
   YamlDir="CAPI-device-requested/$Node"
-  YamlFile=`ls $YamlDir/CAPI-device*${Choice}*deploy.yaml 2>/dev/null`
+  YamlFile=`ls $YamlDir/CAPI-device*${Choice}*deploy.yaml 2>/dev/null | head -1`
 fi
 
 ################################################################################################################
@@ -141,7 +141,10 @@ echo
 echo
 echo "List of available CAPIapp yaml files for $Choice in $YamlDir directory :" 
 echo "---------------------------------------------------------------------------------------------------------------------------"
-basename -a `ls $YamlDir/*CAPI*$Choice*.yaml`
+for i in `ls $YamlDir/*CAPI*$Choice*.yaml`; do
+   basename -a $i
+done
+
 echo
 echo "please give the alternative one that you may want, or leave empty if you want to use `basename $YamlFile`:"
 echo -e "?: \c"
