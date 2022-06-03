@@ -21,7 +21,6 @@ clear
 # VARIABLES
 
 Node="hawk08"
-Menu=1
 UserName=""
 TempFile="/tmp/user_CAPIapp.tmp"
 UserYAMLRootDir=/tmp
@@ -33,6 +32,8 @@ YamlRootDir=""
 SubDir="nul"
 YamlDir=""
 CardType=""
+UserOption=0
+CardOption=0
 
 ################################################################################################################
 # FUNCTIONS
@@ -46,20 +47,19 @@ function usage
   echo
   echo "Bash script used when a standard user wants a POD with an OpenCAPI card"
   echo
-  echo "  + No parameters given => `basename $0` starts the menu"
-  echo "  + One parameter given when starting `basename $0` (parameter chosen among the menu possible options) => no menu or question, just doing what has been requested"
-  echo "  + special case: when prune action is chosen as 1st parameter, you may provide nothing as 2nd parameter, or 'all', or any filesystem known by the tool (again see the menu options)"
+  echo "  + No parameters given => `basename $0` asks questions"
+  echo "  + Missing parameters  => `basename $0` asks questions about the missing parameters"
   echo
-  echo "  + -h / -? / --help: shows this usage info"
+  echo "  + -u <User Name> : to give your user name"
+  echo "  + -c <Card Name> : to give the card type you want"
+  echo
+  echo "  + -h : shows this usage info"
   echo
   echo "Example:"
   echo "--------"
   echo "`basename $0`"
-  echo "`basename $0` all"
-  echo "`basename $0` list"
-  echo "`basename $0` prune"
-  echo "`basename $0` prune all"
-  echo "`basename $0` prune root"
+  echo "`basename $0` -u Fabrice"
+  echo "`basename $0` -u Fabrice -c ad9h3"
   echo
   exit 0
 }
@@ -68,32 +68,30 @@ function usage
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
 #
 
-if [ $# -gt 0 ]; then
-  Menu=0
+while getopts ":u:c:h" option; do
+  case $option in
+    u)
+      UserName=$OPTARG
+      UserOption=1
+    ;;
+    c)
+      CardName=$OPTARG
+      CardOption=1
+    ;;
+    h)
+      usage
+    ;;
 
-  while getopts ":u:c:" option; do
-    case $option in
-      u)
-        UserName=$OPTARG
-      ;;
-      c)
-        CardName=$OPTARG
-      ;;
-      h)
-        usage
-      ;;
-
-      \?) echo "Unknown option: -$OPTARG" >&2; exit 1;;
-      :) echo "Missing option argument for -$OPTARG" >&2; exit 1;;
-      *) echo "Unimplemented option: -$OPTARG" >&2; exit 1;;
-    esac
-  done
-fi
+    \?) echo "Unknown option: -$OPTARG" >&2; exit 1;;
+    :) echo "Missing option argument for -$OPTARG" >&2; exit 1;;
+    *) echo "Unimplemented option: -$OPTARG" >&2; exit 1;;
+  esac
+done
 
 ################################################################################################################
 # ASKING FOR THE USER NAME
 
-if [ $Menu -eq 1 ]; then
+if [ $UserOption -eq 0 ]; then
   while [[ "$UserName" == "" ]]; do
     echo
     echo "What is your name ? (no special character) ? :"
@@ -126,7 +124,7 @@ echo "(0 means no card has been allocated yet)"
 echo -e "\t\t\t\t requests\tlimits"
 oc describe node $Node | sed -n '/Allocated resources:/,//p' | grep xilinx
 
-if [ $Menu -eq 1 ]; then
+if [ $CardOption -eq 0 ]; then
   while ! grep -q $CardName $TempFile; do
     echo
     echo "Please choose between the following card:"
