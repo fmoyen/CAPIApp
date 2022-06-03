@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: images-<USER>-pvc
+  namespace: fabriceproject
+spec:
+  accessModes:
+  - ReadWriteOnce
+  volumeMode: Filesystem 
+  resources:
+    requests:
+      storage: 500Mi 
+  storageClassName: images-<USER>-storageclass

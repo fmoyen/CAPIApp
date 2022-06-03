@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: images-<USER>
+  annotation:
+    volume.beta.kubernetes.io/mount-options: ro
+spec:
+  capacity:
+    storage: 500Mi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: images-<USER>-storageclass
+  nfs:
+    path: /export/Images/<USER>
+    server: 10.3.76.170

@@ -1,0 +1,48 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oc-<USER>-<CARD>
+  namespace: fabriceproject
+  labels:
+    app: oc-<USER>-<CARD>
+    app.kubernetes.io/component: oc-<USER>-<CARD>
+    app.kubernetes.io/instance: oc-<USER>-<CARD>
+    app.kubernetes.io/part-of: capiapp-app
+    app.openshift.io/runtime-namespace: fabriceproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oc-<USER>-<CARD>
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: oc-<USER>-<CARD>
+        deploymentconfig: oc-<USER>-<CARD>
+    spec:
+      containers:
+        - name: oc-<USER>-<CARD>-pod
+          image: docker.io/fmoyen/capiapp:latest
+          resources:
+            limits:
+              <CARD_REF>: 1 # requesting 1x <CARD_REF> card
+          volumeMounts:
+            - name: images-<USER>
+              mountPath: /images/<USER>
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      schedulerName: default-scheduler
+      volumes:
+        - name: images-<USER>
+          persistentVolumeClaim:
+            claimName: images-<USER>-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+
