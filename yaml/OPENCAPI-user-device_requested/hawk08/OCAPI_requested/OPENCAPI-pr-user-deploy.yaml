@@ -2,13 +2,13 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: oc-<USER>-<CARD>
-  namespace: fabriceproject
+  namespace: <NAMESPACE>
   labels:
     app: oc-<USER>-<CARD>
     app.kubernetes.io/component: oc-<USER>-<CARD>
     app.kubernetes.io/instance: oc-<USER>-<CARD>
     app.kubernetes.io/part-of: capiapp-app
-    app.openshift.io/runtime-namespace: fabriceproject
+    app.openshift.io/runtime-namespace: <NAMESPACE>
 spec:
   replicas: 1
   selector:

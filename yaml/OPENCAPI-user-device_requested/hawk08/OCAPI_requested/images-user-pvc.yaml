@@ -2,7 +2,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: images-<USER>-pvc
-  namespace: fabriceproject
+  namespace: <NAMESPACE>
 spec:
   accessModes:
   - ReadWriteOnce

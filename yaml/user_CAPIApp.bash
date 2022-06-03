@@ -28,6 +28,8 @@ UserResourcesDeleteScript="resourcesDelete.bash"
 CardName="nul"
 ImagesDevice_PvYamlFile=""
 ImagesDevice_PvcYamlFile=""
+UserNSCreationFile="userNamespaceCreation.bash"
+UserNamespace=""
 YamlRootDir=""
 SubDir="nul"
 YamlDir=""
@@ -101,10 +103,12 @@ if [ $UserOption -eq 0 ]; then
 
 else
   echo
-echo "========================================================================================================================================="
+  echo "========================================================================================================================================="
   echo "USER NAME: $UserName"
-echo "========================================================================================================================================="
+  echo "========================================================================================================================================="
 fi
+
+UserNamespace="$UserName-project"
 
 ################################################################################################################
 # CHOOSING THE CARD
@@ -192,14 +196,15 @@ mkdir -p $UserYAMLDir
 echo
 echo "Building the User/Card specific yaml definition files replacing:"
 echo "----------------------------------------------------------------"
-echo "  + <USER> --> $UserName"
-echo "  + <CARD> --> $CardName"
-echo "  + <CARD_REF> -->$CardFullName"
+echo "  + <USER>      --> $UserName"
+echo "  + <CARD>      --> $CardName"
+echo "  + <CARD_REF>  --> $CardFullName"
+echo "  + <NAMESPACE> --> $UserNamespace"
 echo
 echo "(from $YamlDir yaml files)"
 
 for file in $ImagesDevice_PvYamlFile $ImagesDevice_PvcYamlFile $YamlFile; do
-  sed "s!<USER>!$UserName!g; s!<CARD>!$CardName!g; s!<CARD_REF>!$CardFullName!g" $file > $UserYAMLDir/`basename $file`
+  sed "s!<USER>!$UserName!g; s!<CARD>!$CardName!g; s!<CARD_REF>!$CardFullName!g; s!<NAMESPACE>!$UserNamespace!g" $file > $UserYAMLDir/`basename $file`
 done
 
 UserImagesDevice_PvYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvYamlFile`"
@@ -207,33 +212,60 @@ UserImagesDevice_PvcYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvcYamlFile`"
 UserYamlFile="$UserYAMLDir/`basename $YamlFile`"
 
 #---------------------------------------------------------------------------------------------------------------
-# Building the script that will be responsible for deleting all user resources (PV, PVC, POD, etc)
+# Building the script responsible for the namespace creation
+
+cat <<EOF > $UserYAMLDir/$UserNSCreationFile
+#!/bin/bash
+
+# Script responsible for creating the User namespace
+
+echo
+echo "========================================================================================================================================="
+echo "CREATING THE NAMESPACE (PROJECT): $UserNamespace..."
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+
+echo "oc create namespace $UserNamespace"
+oc create namespace $UserNamespace
+
+echo "========================================================================================================================================="
+echo
+EOF
+
+chmod u+x $UserYAMLDir/$UserNSCreationFile
+
+#---------------------------------------------------------------------------------------------------------------
+# Building the script that will be responsible for deleting all user resources (PV, PVC, POD, Namespace)
 
 cat <<EOF > $UserYAMLDir/$UserResourcesDeleteScript
 #!/bin/bash
 
-# Script that will delete all resources for the user $UserName (PV, PVC, POD, etc)
+# Script that will delete all resources for the user $UserName (PV, PVC, POD, Namespace)
 
 echo
 echo "========================================================================================================================================="
 echo "DELETING RESOURCES FOR USER $UserName..."
 echo
 echo "Warning: PVC deletion may take a minute as it needs to wait for Pod complete deletion"
+echo "         Namespace deletion is also not instantaneous"
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 
 # Deleting the Deployment (with the ReplicatSet and the Pod coming with it)
 echo
-echo "oc -n fabriceproject delete deployment.apps/oc-$UserName-$CardName"
-oc -n fabriceproject delete deployment.apps/oc-$UserName-$CardName
+echo "oc -n $UserNamespace delete deployment.apps/oc-$UserName-$CardName"
+oc -n $UserNamespace delete deployment.apps/oc-$UserName-$CardName
 
 # Deleting PVC & PV
 echo
-echo "oc -n fabriceproject delete persistentvolumeclaim/images-$UserName-pvc"
-oc -n fabriceproject delete persistentvolumeclaim/images-$UserName-pvc
+echo "oc -n $UserNamespace delete persistentvolumeclaim/images-$UserName-pvc"
+oc -n $UserNamespace delete persistentvolumeclaim/images-$UserName-pvc
 
 echo
 echo "oc delete persistentvolume/images-$UserName"
 oc delete persistentvolume/images-$UserName
+
+echo
+echo "oc delete namespace $UserNamespace"
+oc delete namespace $UserNamespace
 
 # Deleting the user Yaml directory
 echo
@@ -246,6 +278,11 @@ echo
 EOF
 
 chmod u+x $UserYAMLDir/$UserResourcesDeleteScript
+
+################################################################################################################
+# CREATING THE NAMESPACE $UserNamespace thanks to $UserYAMLDir/$UserNSCreationFile bash script
+
+$UserYAMLDir/$UserNSCreationFile
 
 ################################################################################################################
 # DISPLAYING THE USER YAML DEFINITION FILES AND STARTING THE POD
