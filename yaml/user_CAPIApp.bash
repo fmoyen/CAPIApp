@@ -29,6 +29,7 @@ CardName="nul"
 ImagesDevice_PvYamlFile=""
 ImagesDevice_PvcYamlFile=""
 UserNSCreationFile="userNamespaceCreation.bash"
+MopSecretCreationFile="mopDockerSecretCreation.bash"
 UserNamespace=""
 YamlRootDir=""
 SubDir="nul"
@@ -36,6 +37,8 @@ YamlDir=""
 CardType=""
 UserOption=0
 CardOption=0
+DockerPasswordOption=0
+DockerPassword=""
 
 ################################################################################################################
 # FUNCTIONS
@@ -55,6 +58,8 @@ function usage
   echo "  + -u <User Name> : to give your user name"
   echo "  + -c <Card Name> : to give the card type you want"
   echo
+  echo "  + -p <Docker Personal Password> : Specific to IBM Montpellier (Docker fmoyen password to download Docker images)"
+  echo
   echo "  + -h : shows this usage info"
   echo
   echo "Example:"
@@ -70,7 +75,7 @@ function usage
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
 #
 
-while getopts ":u:c:h" option; do
+while getopts ":u:c:p:h" option; do
   case $option in
     u)
       UserName=$OPTARG
@@ -79,6 +84,10 @@ while getopts ":u:c:h" option; do
     c)
       CardName=$OPTARG
       CardOption=1
+    ;;
+    p)
+      DockerPassword=$OPTARG
+      DockerPasswordOption=1
     ;;
     h)
       usage
@@ -109,6 +118,18 @@ else
 fi
 
 UserNamespace="$UserName-project"
+
+################################################################################################################
+# SPECIFIC TO IBM MONTPELLIER: ASKING FOR THE DOCKER fmoyen PASSWORD
+
+if [ $DockerPasswordOption -eq 0 ]; then
+  while [[ "$DockerPassword" == "" ]]; do
+    echo
+    echo "What is the Docker fmoyen Password ? :"
+    echo "--------------------------------------"
+    read DockerPassword
+  done
+fi
 
 ################################################################################################################
 # CHOOSING THE CARD
@@ -234,6 +255,40 @@ EOF
 chmod u+x $UserYAMLDir/$UserNSCreationFile
 
 #---------------------------------------------------------------------------------------------------------------
+# Building the script responsible for the IBM Montpellier specific Secret creation
+
+cat <<EOF > $UserYAMLDir/$MopSecretCreationFile
+#!/bin/bash
+
+# Script responsible for creating the Secret specific to IBM Montpellier
+
+echo
+echo "========================================================================================================================================="
+echo "CREATING THE SECRET docker-fmoyen FOR PROJECT $UserNamespace and adding it to Default Service Account..."
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+
+echo "oc -n $UserNamespace create secret docker-registry docker-fmoyen \\\\"
+echo "   --docker-server=docker.io  \\\\"
+echo "   --docker-username=fmoyen \\\\"
+echo "   --docker-password=XXXXXXXXX \\\\"
+echo "   --docker-email=fabrice_moyen@fr.ibm.com"
+
+oc -n $UserNamespace create secret docker-registry docker-fmoyen \
+   --docker-server=docker.io  \
+   --docker-username=fmoyen \
+   --docker-password=$DockerPassword \
+   --docker-email=fabrice_moyen@fr.ibm.com
+
+echo
+echo "oc -n $UserNamespace secrets link default docker-fmoyen --for=pull"
+sleep 2 # Giving some time for the default Service Account to be available for update
+oc -n $UserNamespace secrets link default docker-fmoyen --for=pull
+
+EOF
+
+chmod u+x $UserYAMLDir/$MopSecretCreationFile
+
+#---------------------------------------------------------------------------------------------------------------
 # Building the script that will be responsible for deleting all user resources (PV, PVC, POD, Namespace)
 
 cat <<EOF > $UserYAMLDir/$UserResourcesDeleteScript
@@ -285,6 +340,12 @@ chmod u+x $UserYAMLDir/$UserResourcesDeleteScript
 $UserYAMLDir/$UserNSCreationFile
 
 ################################################################################################################
+# SPECIFIC TO IBM MONTPELLIER: CREATING A SECRET TO PULL DOCKER IMAGE WITH FMOYEN ID
+# (THIS TO OVERCOME GLOBAL LIMITATIONS)
+
+$UserYAMLDir/$MopSecretCreationFile
+
+################################################################################################################
 # DISPLAYING THE USER YAML DEFINITION FILES AND STARTING THE POD
 
 echo
@@ -317,7 +378,7 @@ echo
 
 echo
 echo "========================================================================================================================================="
-echo "SCRIPT TO USE IN ORDER TO DELETE THE USER RESOURCES (PV, PVC, POD, etc):"
+echo "SCRIPT TO USE IN ORDER TO DELETE THE USER RESOURCES (PV, PVC, POD, NAMESPACE):"
 echo "------------------------------------------------------------------------"
 echo "  Bash script to delete the user resources:      $UserYAMLDir/$UserResourcesDeleteScript"
 echo "========================================================================================================================================="
