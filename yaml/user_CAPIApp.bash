@@ -380,6 +380,22 @@ echo "==========================================================================
 echo
 
 ################################################################################################################
+# DISPLAYING NEWLY CREATED RESOURCES INFO
+
+echo
+echo "========================================================================================================================================="
+echo "HERUNDER THE INFO ABOUT THE NEWLY CRATED RESOURCES:"
+echo "------------------------------------------------------------------------"
+echo "oc -n $UserNamespace get all" 
+oc -n $UserNamespace get all 
+echo
+echo "------------------------------------------------------------------------"
+echo "oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc" 
+oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc 
+echo "========================================================================================================================================="
+echo
+
+################################################################################################################
 # DISPLAYING THE BASH SCRIPT GENERATED FOR DELETING THE USER RESOURCES
 
 echo
