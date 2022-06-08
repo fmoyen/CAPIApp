@@ -176,6 +176,7 @@ if [ -z ${Montpellier+x} ]; then    # NOT Montpellier so manually giving the lis
 xilinx.com/fpga-ad9h3_ocapi-0x0667
 xilinx.com/fpga-ad9h7_ocapi-0x0666
 EOF
+  trap "$TrapCmd" EXIT
 
 else    # Montpellier, so directely getting the list of cards from the only IC922 worker node
   Node="hawk08"
