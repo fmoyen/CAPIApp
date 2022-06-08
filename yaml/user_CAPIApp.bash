@@ -2,6 +2,7 @@
 
 clear
 
+
 ################################################################################################################
 # Bash script used when a standard user wants a POD with an OpenCAPI card
 # Author: Fabrice MOYEN (IBM)
@@ -17,10 +18,10 @@ clear
 #
 # We need to create a script to delete User PV, PVC and deployment
 
+
 ################################################################################################################
 # VARIABLES
 
-Node="hawk08"
 UserName=""
 TempFile="/tmp/user_CAPIapp.tmp"
 UserYAMLRootDir=/tmp
@@ -40,6 +41,10 @@ CardOption=0
 DockerPasswordOption=0
 DockerPassword=""
 
+# Delete the next line to unset 'Montpellier' variable if you are not at Montpellier 
+Montpellier=1
+
+
 ################################################################################################################
 # FUNCTIONS
 #
@@ -57,8 +62,12 @@ function usage
   echo
   echo "  + -u <User Name> : to give your user name"
   echo "  + -c <Card Name> : to give the card type you want"
-  echo
-  echo "  + -p <Docker Personal Password> : Specific to IBM Montpellier (Docker fmoyen password to download Docker images)"
+
+  if [ ! -z ${Montpellier+x} ]; then
+    echo
+    echo "  + -p <Docker Personal Password> : Specific to IBM Montpellier (Docker fmoyen password to download Docker images)"
+  fi
+
   echo
   echo "  + -h : shows this usage info"
   echo
@@ -70,6 +79,7 @@ function usage
   echo
   exit 0
 }
+
 
 ################################################################################################################
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
@@ -99,6 +109,18 @@ while getopts ":u:c:p:h" option; do
   esac
 done
 
+
+################################################################################################################
+# MONTPELLIER OR NOT ?
+
+if [ ! -z ${Montpellier+x} ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "MONTPELLIER CLUSTER"
+  echo "========================================================================================================================================="
+fi
+
+
 ################################################################################################################
 # ASKING FOR THE USER NAME
 
@@ -119,47 +141,63 @@ fi
 
 UserNamespace="$UserName-project"
 
+
 ################################################################################################################
 # SPECIFIC TO IBM MONTPELLIER: ASKING FOR THE DOCKER fmoyen PASSWORD
 
-if [ $DockerPasswordOption -eq 0 ]; then
-  while [[ "$DockerPassword" == "" ]]; do
-    echo
-    echo "What is the Docker fmoyen Password ? :"
-    echo "--------------------------------------"
-    read DockerPassword
-  done
+if [ ! -z ${Montpellier+x} ]; then
+  if [ $DockerPasswordOption -eq 0 ]; then
+    while [[ "$DockerPassword" == "" ]]; do
+      echo
+      echo "What is the Docker fmoyen Password ? :"
+      echo "--------------------------------------"
+      read DockerPassword
+    done
 
-else
-  echo
-  echo "========================================================================================================================================="
-  echo "DOCKER PASSWORD HAS BEEN PROVIDED"
-  echo "========================================================================================================================================="
+  else
+    echo
+    echo "========================================================================================================================================="
+    echo "DOCKER PASSWORD HAS BEEN PROVIDED"
+    echo "========================================================================================================================================="
+  fi
 fi
+
 
 ################################################################################################################
 # CHOOSING THE CARD
 
 TrapCmd="rm -f $TempFile"
 
-echo
-echo "List of CAPI/OpenCAPI cards seen by the Device Plugin on $Node:"
-echo "----------------------------------------------------------------"
-oc describe node $Node | sed -n '/Capacity:/,/Allocatable/p' | grep xilinx | tee $TempFile
-trap "$TrapCmd" EXIT
+if [ -z ${Montpellier+x} ]; then    # NOT Montpellier so manually giving the list of available cards in the cluster
+  echo
+  echo "List of OpenCAPI cards allocatable:"
+  echo "-----------------------------------"
+  cat <<EOF | tee $TempFile
+xilinx.com/fpga-ad9h3_ocapi-0x0667
+xilinx.com/fpga-ad9h7_ocapi-0x0666
+EOF
 
-echo
-echo "List of CAPI/OpenCAPI cards requests / limts on $Node:"
-echo "-------------------------------------------------------"
-echo "(0 means no card has been allocated yet)"
-echo -e "\t\t\t\t requests\tlimits"
-oc describe node $Node | sed -n '/Allocated resources:/,//p' | grep xilinx
+else    # Montpellier, so directely getting the list of cards from the only IC922 worker node
+  Node="hawk08"
+  echo
+  echo "List of OpenCAPI cards seen by the Device Plugin on $Node:"
+  echo "-----------------------------------------------------------"
+  oc describe node $Node | sed -n '/Capacity:/,/Allocatable/p' | grep xilinx | tee $TempFile
+  trap "$TrapCmd" EXIT
+
+  echo
+  echo "List of OpenCAPI cards requests / limts on $Node:"
+  echo "--------------------------------------------------"
+  echo "(0 means no card has been allocated yet)"
+  echo -e "\t\t\t\t requests\tlimits"
+  oc describe node $Node | sed -n '/Allocated resources:/,//p' | grep xilinx
+fi
 
 if [ $CardOption -eq 0 ]; then
   while ! grep -q $CardName $TempFile; do
     echo
-    echo "Please choose between the following card:"
-    echo "-----------------------------------------"
+    echo "Please choose between the following card type:"
+    echo "----------------------------------------------"
     cat $TempFile | awk -F"-" '{print $2}' | awk -F"_" '{print $1}'
     echo -e "?: \c"
     read CardName
@@ -172,6 +210,7 @@ echo "==========================================================================
 echo "CARD CHOICE                       : $CardName" 
 echo "FULL REFERENCE OF THE CHOSEN CARD : $CardFullName"
 echo "========================================================================================================================================="
+
 
 ################################################################################################################
 # OPENCAPI CASE
@@ -188,17 +227,15 @@ if `echo $CardFullName | grep -q ocapi`; then
   ImagesDevice_PvYamlFile=`ls $YamlDir/images-user-pv.yaml 2>/dev/null`
   ImagesDevice_PvcYamlFile=`ls $YamlDir/images-user-pvc.yaml 2>/dev/null`
 
+
 ################################################################################################################
 # CAPI CASE
 
 else
   echo "CAPI case not supported"
   exit 1
-
-  CardType="Capi"
-  YamlDir="CAPI-device-requested/$Node"
-  YamlFile=`ls $YamlDir/CAPI-device*${CardName}*deploy.yaml 2>/dev/null | head -1`
 fi
+
 
 ################################################################################################################
 # CARD TYPE
@@ -207,6 +244,7 @@ echo
 echo "Type of card:"
 echo "-------------"
 echo " --> $CardType"
+
 
 ################################################################################################################
 # BUILDING THE YAML FILES (IMAGES+POD) WITH THE GIVEN INFO
@@ -217,7 +255,8 @@ UserYAMLDir="$UserYAMLRootDir/$UserName"
 mkdir -p $UserYAMLDir
 #trap "$TrapCmd" EXIT
 
-#---------------------------------------------------------------------------------------------------------------
+
+#===============================================================================================================
 # Replacing <USER> / <CARD> by $UserName / $CardName in the yaml definition files
 
 echo
@@ -238,7 +277,8 @@ UserImagesDevice_PvYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvYamlFile`"
 UserImagesDevice_PvcYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvcYamlFile`"
 UserYamlFile="$UserYAMLDir/`basename $YamlFile`"
 
-#---------------------------------------------------------------------------------------------------------------
+
+#===============================================================================================================
 # Building the script responsible for the namespace creation
 
 cat <<EOF > $UserYAMLDir/$UserNSCreationFile
@@ -260,10 +300,12 @@ EOF
 
 chmod u+x $UserYAMLDir/$UserNSCreationFile
 
-#---------------------------------------------------------------------------------------------------------------
+
+#===============================================================================================================
 # Building the script responsible for the IBM Montpellier specific Secret creation
 
-cat <<EOF > $UserYAMLDir/$MopSecretCreationFile
+if [ ! -z ${Montpellier+x} ]; then
+  cat <<EOF > $UserYAMLDir/$MopSecretCreationFile
 #!/bin/bash
 
 # Script responsible for creating the Secret specific to IBM Montpellier
@@ -292,9 +334,11 @@ oc -n $UserNamespace secrets link default docker-fmoyen --for=pull
 
 EOF
 
-chmod u+x $UserYAMLDir/$MopSecretCreationFile
+  chmod u+x $UserYAMLDir/$MopSecretCreationFile
+fi
 
-#---------------------------------------------------------------------------------------------------------------
+
+#===============================================================================================================
 # Building the script that will be responsible for deleting all user resources (PV, PVC, POD, Namespace)
 
 cat <<EOF > $UserYAMLDir/$UserResourcesDeleteScript
@@ -324,6 +368,7 @@ echo
 echo "oc delete persistentvolume/images-$UserName"
 oc delete persistentvolume/images-$UserName
 
+# Deleting the NameSpace
 echo
 echo "oc delete namespace $UserNamespace"
 oc delete namespace $UserNamespace
@@ -340,16 +385,21 @@ EOF
 
 chmod u+x $UserYAMLDir/$UserResourcesDeleteScript
 
+
 ################################################################################################################
 # CREATING THE NAMESPACE $UserNamespace thanks to $UserYAMLDir/$UserNSCreationFile bash script
 
 $UserYAMLDir/$UserNSCreationFile
 
+
 ################################################################################################################
 # SPECIFIC TO IBM MONTPELLIER: CREATING A SECRET TO PULL DOCKER IMAGE WITH FMOYEN ID
 # (THIS TO OVERCOME GLOBAL LIMITATIONS)
 
-$UserYAMLDir/$MopSecretCreationFile
+if [ ! -z ${Montpellier+x} ]; then
+  $UserYAMLDir/$MopSecretCreationFile
+fi
+
 
 ################################################################################################################
 # DISPLAYING THE USER YAML DEFINITION FILES AND STARTING THE POD
@@ -379,12 +429,18 @@ done
 echo "========================================================================================================================================="
 echo
 
+
 ################################################################################################################
 # DISPLAYING NEWLY CREATED RESOURCES INFO
 
 echo
 echo "========================================================================================================================================="
-echo "HERUNDER THE INFO ABOUT THE NEWLY CRATED RESOURCES:"
+echo "HERUNDER INFO ABOUT THE NEWLY CRATED RESOURCES:"
+echo
+echo "------------------------------------------------------------------------"
+echo "oc describe namespace/$UserNamespace" 
+oc describe namespace/$UserNamespace
+echo
 echo "------------------------------------------------------------------------"
 echo "oc -n $UserNamespace get all" 
 oc -n $UserNamespace get all 
@@ -394,6 +450,7 @@ echo "oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc"
 oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc 
 echo "========================================================================================================================================="
 echo
+
 
 ################################################################################################################
 # DISPLAYING THE BASH SCRIPT GENERATED FOR DELETING THE USER RESOURCES
