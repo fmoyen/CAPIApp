@@ -16,7 +16,7 @@ clear
 #
 # We need to be able to provide all these info thanks to parameters (without any interactive question)
 #
-# We need to create a script to delete User PV, PVC and deployment
+# We need to create a script to delete User PV, PVC, deployment and namespace
 
 
 ################################################################################################################
@@ -25,12 +25,12 @@ clear
 UserName=""
 TempFile="/tmp/user_CAPIapp.tmp"
 UserYAMLRootDir=/tmp
-UserResourcesDeleteScript="resourcesDelete.bash"
+UserResourcesDeleteScript="deleteUserResources.bash"
 CardName="nul"
 ImagesDevice_PvYamlFile=""
 ImagesDevice_PvcYamlFile=""
-UserNSCreationFile="userNamespaceCreation.bash"
-MopSecretCreationFile="mopDockerSecretCreation.bash"
+UserNSCreationFile="createUserNamespace.bash"
+MopSecretCreationFile="createMopDockerSecret.bash"
 UserNamespace=""
 YamlRootDir=""
 SubDir="nul"
@@ -40,6 +40,7 @@ UserOption=0
 CardOption=0
 DockerPasswordOption=0
 DockerPassword=""
+RealPath=`realpath $0`
 
 # Delete the next line to unset 'Montpellier' variable if you are not at Montpellier 
 Montpellier=1
@@ -125,12 +126,15 @@ fi
 # ASKING FOR THE USER NAME
 
 if [ $UserOption -eq 0 ]; then
+  echo
+  echo "========================================================================================================================================="
   while [[ "$UserName" == "" ]]; do
     echo
     echo "What is your name ? (no special character) ? :"
     echo "----------------------------------------------"
     read UserName
   done
+  echo "========================================================================================================================================="
 
 else
   echo
@@ -147,12 +151,15 @@ UserNamespace="$UserName-project"
 
 if [ ! -z ${Montpellier+x} ]; then
   if [ $DockerPasswordOption -eq 0 ]; then
+    echo
+    echo "========================================================================================================================================="
     while [[ "$DockerPassword" == "" ]]; do
       echo
       echo "What is the Docker fmoyen Password ? :"
       echo "--------------------------------------"
       read DockerPassword
     done
+    echo "========================================================================================================================================="
 
   else
     echo
@@ -168,8 +175,9 @@ fi
 
 TrapCmd="rm -f $TempFile"
 
+echo
+echo "========================================================================================================================================="
 if [ -z ${Montpellier+x} ]; then    # NOT Montpellier so manually giving the list of available cards in the cluster
-  echo
   echo "List of OpenCAPI cards allocatable:"
   echo "-----------------------------------"
   cat <<EOF | tee $TempFile
@@ -180,7 +188,6 @@ EOF
 
 else    # Montpellier, so directely getting the list of cards from the only IC922 worker node
   Node="hawk08"
-  echo
   echo "List of OpenCAPI cards seen by the Device Plugin on $Node:"
   echo "-----------------------------------------------------------"
   oc describe node $Node | sed -n '/Capacity:/,/Allocatable/p' | grep xilinx | tee $TempFile
@@ -204,12 +211,13 @@ if [ $CardOption -eq 0 ]; then
     read CardName
   done
 fi
+echo "========================================================================================================================================="
 
 CardFullName=`grep $CardName $TempFile | awk -F":" '{print $1}' | sed 's/ //g'`
 echo
 echo "========================================================================================================================================="
-echo "CARD CHOICE                       : $CardName" 
-echo "FULL REFERENCE OF THE CHOSEN CARD : $CardFullName"
+echo "CARD CHOICE                        : $CardName" 
+echo "FULL REFERENCE FOR THE CHOSEN CARD : $CardFullName"
 echo "========================================================================================================================================="
 
 
@@ -242,9 +250,11 @@ fi
 # CARD TYPE
 
 echo
+echo "========================================================================================================================================="
 echo "Type of card:"
 echo "-------------"
 echo " --> $CardType"
+echo "========================================================================================================================================="
 
 
 ################################################################################################################
@@ -261,6 +271,7 @@ mkdir -p $UserYAMLDir
 # Replacing <USER> / <CARD> by $UserName / $CardName in the yaml definition files
 
 echo
+echo "========================================================================================================================================="
 echo "Building the User/Card specific yaml definition files replacing:"
 echo "----------------------------------------------------------------"
 echo "  + <USER>      --> $UserName"
@@ -268,7 +279,7 @@ echo "  + <CARD>      --> $CardName"
 echo "  + <CARD_REF>  --> $CardFullName"
 echo "  + <NAMESPACE> --> $UserNamespace"
 echo
-echo "(from $YamlDir yaml files)"
+echo "(from `dirname $RealPath`/$YamlDir yaml files)"
 
 for file in $ImagesDevice_PvYamlFile $ImagesDevice_PvcYamlFile $YamlFile; do
   sed "s!<USER>!$UserName!g; s!<CARD>!$CardName!g; s!<CARD_REF>!$CardFullName!g; s!<NAMESPACE>!$UserNamespace!g" $file > $UserYAMLDir/`basename $file`
@@ -277,6 +288,7 @@ done
 UserImagesDevice_PvYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvYamlFile`"
 UserImagesDevice_PvcYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvcYamlFile`"
 UserYamlFile="$UserYAMLDir/`basename $YamlFile`"
+echo "========================================================================================================================================="
 
 
 #===============================================================================================================
@@ -290,7 +302,7 @@ cat <<EOF > $UserYAMLDir/$UserNSCreationFile
 echo
 echo "========================================================================================================================================="
 echo "CREATING THE NAMESPACE (PROJECT): $UserNamespace..."
-echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+echo "---------------------------------"
 
 echo "oc create namespace $UserNamespace"
 oc create namespace $UserNamespace
@@ -314,7 +326,7 @@ if [ ! -z ${Montpellier+x} ]; then
 echo
 echo "========================================================================================================================================="
 echo "CREATING THE SECRET docker-fmoyen FOR PROJECT $UserNamespace and adding it to Default Service Account..."
-echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+echo "--------------------------------------------------------------------------------------------------------"
 
 echo "oc -n $UserNamespace create secret docker-registry docker-fmoyen \\\\"
 echo "   --docker-server=docker.io  \\\\"
@@ -332,6 +344,7 @@ echo
 echo "oc -n $UserNamespace secrets link default docker-fmoyen --for=pull"
 sleep 2 # Giving some time for the default Service Account to be available for update
 oc -n $UserNamespace secrets link default docker-fmoyen --for=pull
+echo "========================================================================================================================================="
 
 EOF
 
@@ -407,13 +420,11 @@ fi
 
 echo
 echo "========================================================================================================================================="
-echo "STARTING THE POD USING THESE DEFINITION YAML FILES FROM $UserYAMLDir DIRECTORY:"
-echo "------------------------------------------------------------------------------------------------------------------------"
-echo "  Binary Image PV creation :                 `basename $UserImagesDevice_PvYamlFile`"
-echo "  Binary Image PVC creation :                `basename $UserImagesDevice_PvcYamlFile`"
-echo
-echo "  CAPIapp deployment creation:               `basename $UserYamlFile`"
-echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+echo "CREATING THE POD USING THESE DEFINITION YAML FILES:"
+echo "---------------------------------------------------"
+echo "  Binary Image PV creation :                 $UserImagesDevice_PvYamlFile"
+echo "  Binary Image PVC creation :                $UserImagesDevice_PvcYamlFile"
+echo "  CAPIapp deployment creation:               $UserYamlFile"
 
 for i in $UserImagesDevice_PvYamlFile $UserImagesDevice_PvcYamlFile $UserYamlFile; do
   echo 
@@ -428,7 +439,6 @@ for i in $UserImagesDevice_PvYamlFile $UserImagesDevice_PvcYamlFile $UserYamlFil
 done
 
 echo "========================================================================================================================================="
-echo
 
 
 ################################################################################################################
@@ -437,20 +447,20 @@ echo
 echo
 echo "========================================================================================================================================="
 echo "HERUNDER INFO ABOUT THE NEWLY CRATED RESOURCES:"
-echo
-echo "------------------------------------------------------------------------"
+echo "-----------------------------------------------"
+echo 
+echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 echo "oc describe namespace/$UserNamespace" 
 oc describe namespace/$UserNamespace
 echo
-echo "------------------------------------------------------------------------"
+echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 echo "oc -n $UserNamespace get all" 
 oc -n $UserNamespace get all 
 echo
-echo "------------------------------------------------------------------------"
+echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 echo "oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc" 
 oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc 
 echo "========================================================================================================================================="
-echo
 
 
 ################################################################################################################
@@ -458,8 +468,11 @@ echo
 
 echo
 echo "========================================================================================================================================="
-echo "SCRIPT TO USE IN ORDER TO DELETE THE USER RESOURCES (PV, PVC, POD, NAMESPACE):"
-echo "------------------------------------------------------------------------"
-echo "  Bash script to delete the user resources:      $UserYAMLDir/$UserResourcesDeleteScript"
+echo "SCRIPTS TO USE IN ORDER TO DELETE THE USER RESOURCES (PV, PVC, POD, NAMESPACE):"
+echo "-------------------------------------------------------------------------------"
+echo "2 choices:"
+echo "---------:"
+echo "  $UserYAMLDir/$UserResourcesDeleteScript   --> Specific to $UserName user (This script will also remove $UserYAMLDir directory)"
+echo "  `dirname $RealPath`/delete_UserResources.bash -u $UserName"
 echo "========================================================================================================================================="
 echo
