@@ -38,8 +38,10 @@ COPY scripts/get_card_id /usr/local/bin
 
 RUN ln -s /opt/oc-accel/software/tools/oc_action_reprogram /usr/bin/oc_action_reprogram
 
-WORKDIR /home/user
+RUN mkdir /home/user
 RUN chmod g+w /home/user
+ENV HOME=/home/user
+WORKDIR /home/user
 
 COPY StayUp.bash /usr/local/bin
 CMD /usr/local/bin/StayUp.bash 
