@@ -22,6 +22,7 @@ clear
 ################################################################################################################
 # VARIABLES
 
+Verbose=0
 UserName=""
 TempFile="/tmp/user_CAPIapp.tmp"
 UserYAMLRootDir=/tmp
@@ -59,10 +60,11 @@ function usage
   echo "Bash script used when a standard user wants a POD with an OpenCAPI card"
   echo
   echo "  + No parameters given => `basename $0` asks questions"
-  echo "  + Missing parameters  => `basename $0` asks questions about the missing parameters"
+  echo "  + Missing parameters  => `basename $0` asks questions to get the missing parameters"
   echo
   echo "  + -u <User Name> : to give your user name"
   echo "  + -c <Card Name> : to give the card type you want"
+  echo "  + -v             : verbose output"
 
   if [ ! -z ${Montpellier+x} ]; then
     echo
@@ -70,7 +72,7 @@ function usage
   fi
 
   echo
-  echo "  + -h : shows this usage info"
+  echo "  + -h             : shows this usage info"
   echo
   echo "Example:"
   echo "--------"
@@ -86,7 +88,7 @@ function usage
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
 #
 
-while getopts ":u:c:p:h" option; do
+while getopts ":u:c:p:vh" option; do
   case $option in
     u)
       UserName=$OPTARG
@@ -99,6 +101,9 @@ while getopts ":u:c:p:h" option; do
     p)
       DockerPassword=$OPTARG
       DockerPasswordOption=1
+    ;;
+    v)
+      Verbose=1
     ;;
     h)
       usage
@@ -114,7 +119,7 @@ done
 ################################################################################################################
 # MONTPELLIER OR NOT ?
 
-if [ ! -z ${Montpellier+x} ]; then
+if [ ! -z ${Montpellier+x} ] && [ $Verbose -eq 1 ]; then
   echo
   echo "========================================================================================================================================="
   echo "MONTPELLIER CLUSTER"
@@ -137,10 +142,12 @@ if [ $UserOption -eq 0 ]; then
   echo "========================================================================================================================================="
 
 else
-  echo
-  echo "========================================================================================================================================="
-  echo "USER NAME: $UserName"
-  echo "========================================================================================================================================="
+  if [ $Verbose -eq 1 ]; then
+    echo
+    echo "========================================================================================================================================="
+    echo "USER NAME: $UserName"
+    echo "========================================================================================================================================="
+  fi
 fi
 
 UserNamespace="$UserName-project"
@@ -162,10 +169,12 @@ if [ ! -z ${Montpellier+x} ]; then
     echo "========================================================================================================================================="
 
   else
-    echo
-    echo "========================================================================================================================================="
-    echo "DOCKER PASSWORD HAS BEEN PROVIDED"
-    echo "========================================================================================================================================="
+    if [ $Verbose -eq 1 ]; then
+      echo
+      echo "========================================================================================================================================="
+      echo "DOCKER PASSWORD HAS BEEN PROVIDED"
+      echo "========================================================================================================================================="
+    fi
   fi
 fi
 
@@ -214,11 +223,14 @@ fi
 echo "========================================================================================================================================="
 
 CardFullName=`grep $CardName $TempFile | awk -F":" '{print $1}' | sed 's/ //g'`
-echo
-echo "========================================================================================================================================="
-echo "CARD CHOICE                        : $CardName" 
-echo "FULL REFERENCE FOR THE CHOSEN CARD : $CardFullName"
-echo "========================================================================================================================================="
+
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "CARD CHOICE                        : $CardName" 
+  echo "FULL REFERENCE FOR THE CHOSEN CARD : $CardFullName"
+  echo "========================================================================================================================================="
+fi
 
 
 ################################################################################################################
@@ -249,12 +261,14 @@ fi
 ################################################################################################################
 # CARD TYPE
 
-echo
-echo "========================================================================================================================================="
-echo "Type of card:"
-echo "-------------"
-echo " --> $CardType"
-echo "========================================================================================================================================="
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "Type of card:"
+  echo "-------------"
+  echo " --> $CardType"
+  echo "========================================================================================================================================="
+fi
 
 
 ################################################################################################################
@@ -270,16 +284,19 @@ mkdir -p $UserYAMLDir
 #===============================================================================================================
 # Replacing <USER> / <CARD> by $UserName / $CardName in the yaml definition files
 
-echo
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "Building the User/Card specific yaml definition files replacing:"
+  echo "----------------------------------------------------------------"
+  echo "  + <USER>      --> $UserName"
+  echo "  + <CARD>      --> $CardName"
+  echo "  + <CARD_REF>  --> $CardFullName"
+  echo "  + <NAMESPACE> --> $UserNamespace"
+  echo
+  echo "(from `dirname $RealPath`/$YamlDir yaml files)"
 echo "========================================================================================================================================="
-echo "Building the User/Card specific yaml definition files replacing:"
-echo "----------------------------------------------------------------"
-echo "  + <USER>      --> $UserName"
-echo "  + <CARD>      --> $CardName"
-echo "  + <CARD_REF>  --> $CardFullName"
-echo "  + <NAMESPACE> --> $UserNamespace"
-echo
-echo "(from `dirname $RealPath`/$YamlDir yaml files)"
+fi
 
 for file in $ImagesDevice_PvYamlFile $ImagesDevice_PvcYamlFile $YamlFile; do
   sed "s!<USER>!$UserName!g; s!<CARD>!$CardName!g; s!<CARD_REF>!$CardFullName!g; s!<NAMESPACE>!$UserNamespace!g" $file > $UserYAMLDir/`basename $file`
@@ -288,7 +305,6 @@ done
 UserImagesDevice_PvYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvYamlFile`"
 UserImagesDevice_PvcYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvcYamlFile`"
 UserYamlFile="$UserYAMLDir/`basename $YamlFile`"
-echo "========================================================================================================================================="
 
 
 #===============================================================================================================
@@ -403,7 +419,11 @@ chmod u+x $UserYAMLDir/$UserResourcesDeleteScript
 ################################################################################################################
 # CREATING THE NAMESPACE $UserNamespace thanks to $UserYAMLDir/$UserNSCreationFile bash script
 
-$UserYAMLDir/$UserNSCreationFile
+if [ $Verbose -eq 1 ]; then
+  $UserYAMLDir/$UserNSCreationFile
+else
+  $UserYAMLDir/$UserNSCreationFile >/dev/null
+fi
 
 
 ################################################################################################################
@@ -411,20 +431,27 @@ $UserYAMLDir/$UserNSCreationFile
 # (THIS TO OVERCOME GLOBAL LIMITATIONS)
 
 if [ ! -z ${Montpellier+x} ]; then
-  $UserYAMLDir/$MopSecretCreationFile
+  if [ $Verbose -eq 1 ]; then
+    $UserYAMLDir/$MopSecretCreationFile
+  else
+    $UserYAMLDir/$MopSecretCreationFile >/dev/null
+  fi
 fi
 
 
 ################################################################################################################
 # DISPLAYING THE USER YAML DEFINITION FILES AND STARTING THE POD
 
-echo
-echo "========================================================================================================================================="
-echo "CREATING THE POD USING THESE DEFINITION YAML FILES:"
-echo "---------------------------------------------------"
-echo "  Binary Image PV creation :                 $UserImagesDevice_PvYamlFile"
-echo "  Binary Image PVC creation :                $UserImagesDevice_PvcYamlFile"
-echo "  CAPIapp deployment creation:               $UserYamlFile"
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "CREATING THE POD USING THESE DEFINITION YAML FILES:"
+  echo "---------------------------------------------------"
+  echo "  Binary Image PV creation :                 $UserImagesDevice_PvYamlFile"
+  echo "  Binary Image PVC creation :                $UserImagesDevice_PvcYamlFile"
+  echo "  CAPIapp deployment creation:               $UserYamlFile"
+  echo "========================================================================================================================================="
+fi
 
 for i in $UserImagesDevice_PvYamlFile $UserImagesDevice_PvcYamlFile $UserYamlFile; do
   echo 
@@ -438,29 +465,31 @@ for i in $UserImagesDevice_PvYamlFile $UserImagesDevice_PvcYamlFile $UserYamlFil
   fi
 done
 
-echo "========================================================================================================================================="
+sleep 2 # Giving some time for resources to be here
 
 
 ################################################################################################################
 # DISPLAYING NEWLY CREATED RESOURCES INFO
 
-echo
-echo "========================================================================================================================================="
-echo "HERUNDER INFO ABOUT THE NEWLY CRATED RESOURCES:"
-echo "-----------------------------------------------"
-echo 
-echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-echo "oc describe namespace/$UserNamespace" 
-oc describe namespace/$UserNamespace
-echo
-echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-echo "oc -n $UserNamespace get all" 
-oc -n $UserNamespace get all 
-echo
-echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-echo "oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc" 
-oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc 
-echo "========================================================================================================================================="
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "HERUNDER INFO ABOUT THE NEWLY CRATED RESOURCES:"
+  echo "-----------------------------------------------"
+  echo 
+  echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+  echo "oc describe namespace/$UserNamespace" 
+  oc describe namespace/$UserNamespace
+  echo
+  echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+  echo "oc -n $UserNamespace get all" 
+  oc -n $UserNamespace get all 
+  echo
+  echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+  echo "oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc" 
+  oc -n $UserNamespace get pv/images-$UserName pvc/images-$UserName-pvc 
+  echo "========================================================================================================================================="
+fi
 
 
 ################################################################################################################
@@ -473,7 +502,7 @@ echo "==========================================================================
 echo "USEFUL COMMANDS TO ACCESS THE NEWLY CREATED RESOURCES:"
 echo "---------------------------------------------------"
 echo 
-echo "oc -n $UserNamespace rsh $MyPod" 
+echo "  oc -n $UserNamespace rsh $MyPod" 
 echo "========================================================================================================================================="
 
 ################################################################################################################
