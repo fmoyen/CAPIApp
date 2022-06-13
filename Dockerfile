@@ -1,15 +1,15 @@
 FROM quay.io/centos/centos:stream8
 
-RUN dnf install -y langpacks-en glibc-all-langpacks
-RUN dnf upgrade -y
+RUN dnf install -y langpacks-en glibc-all-langpacks && dnf clean all -y
+RUN dnf upgrade -y && dnf clean all -y
 
-RUN dnf install -y yum-utils
-RUN dnf install -y iputils iproute
+RUN dnf install -y yum-utils && dnf clean all -y
+RUN dnf install -y iputils iproute && dnf clean all -y
 RUN dnf config-manager --set-enabled powertools
-RUN dnf install -y libcxl-devel libocxl-devel
+RUN dnf install -y libcxl-devel libocxl-devel && dnf clean all -y
 
-RUN dnf groupinstall -y "Development Tools"
-RUN dnf install -y pciutils
+RUN dnf groupinstall -y "Development Tools" && dnf clean all -y
+RUN dnf install -y pciutils && dnf clean all -y
 
 WORKDIR /opt
 RUN git clone https://github.com/open-power/snap.git
