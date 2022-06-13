@@ -464,6 +464,19 @@ echo "==========================================================================
 
 
 ################################################################################################################
+# DISPLAYING USEFUL COMMANDS TO USE THE NEWLY CREATED RESOURCES
+
+MyPod="pod/`oc -n $UserNamespace get pod --no-headers=true | awk '{print $1}'`"
+
+echo
+echo "========================================================================================================================================="
+echo "USEFUL COMMANDS TO ACCESS THE NEWLY CREATED RESOURCES:"
+echo "---------------------------------------------------"
+echo 
+echo "oc -n $UserNamespace rsh $MyPod" 
+echo "========================================================================================================================================="
+
+################################################################################################################
 # DISPLAYING THE BASH SCRIPT GENERATED FOR DELETING THE USER RESOURCES
 
 echo
@@ -475,4 +488,5 @@ echo "---------:"
 echo "  $UserYAMLDir/$UserResourcesDeleteScript   --> Specific to $UserName user (This script will also remove $UserYAMLDir directory)"
 echo "  `dirname $RealPath`/delete_UserResources.bash -u $UserName"
 echo "========================================================================================================================================="
+
 echo
