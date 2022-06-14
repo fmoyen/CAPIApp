@@ -307,8 +307,8 @@ UserImagesDevice_PvcYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvcYamlFile`"
 UserYamlFile="$UserYAMLDir/`basename $YamlFile`"
 
 
-#===============================================================================================================
-# Building the script responsible for the namespace creation
+################################################################################################################
+# BUILDING THE SCRIPT RESPONSIBLE FOR THE NAMESPACE CREATION
 
 cat <<EOF > $UserYAMLDir/$UserNSCreationFile
 #!/bin/bash
@@ -316,22 +316,22 @@ cat <<EOF > $UserYAMLDir/$UserNSCreationFile
 # Script responsible for creating the User namespace
 
 echo
-echo "========================================================================================================================================="
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "CREATING THE NAMESPACE (PROJECT): $UserNamespace..."
 echo "---------------------------------"
 
 echo "oc create namespace $UserNamespace"
 oc create namespace $UserNamespace
 
-echo "========================================================================================================================================="
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo
 EOF
 
 chmod u+x $UserYAMLDir/$UserNSCreationFile
 
 
-#===============================================================================================================
-# Building the script responsible for the IBM Montpellier specific Secret creation
+################################################################################################################
+# BUILDING THE SCRIPT RESPONSIBLE FOR THE IBM MONTPELLIER SPECIFIC SECRET CREATION
 
 if [ ! -z ${Montpellier+x} ]; then
   cat <<EOF > $UserYAMLDir/$MopSecretCreationFile
@@ -340,7 +340,7 @@ if [ ! -z ${Montpellier+x} ]; then
 # Script responsible for creating the Secret specific to IBM Montpellier
 
 echo
-echo "========================================================================================================================================="
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "CREATING THE SECRET docker-fmoyen FOR PROJECT $UserNamespace and adding it to Default Service Account..."
 echo "--------------------------------------------------------------------------------------------------------"
 
@@ -360,7 +360,7 @@ echo
 echo "oc -n $UserNamespace secrets link default docker-fmoyen --for=pull"
 sleep 2 # Giving some time for the default Service Account to be available for update
 oc -n $UserNamespace secrets link default docker-fmoyen --for=pull
-echo "========================================================================================================================================="
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 
 EOF
 
@@ -368,8 +368,8 @@ EOF
 fi
 
 
-#===============================================================================================================
-# Building the script that will be responsible for deleting all user resources (PV, PVC, POD, Namespace)
+################################################################################################################
+# BUILDING THE SCRIPT THAT WILL BE RESPONSIBLE FOR DELETING ALL USER RESOURCES (PV, PVC, POD, NAMESPACE)
 
 cat <<EOF > $UserYAMLDir/$UserResourcesDeleteScript
 #!/bin/bash
@@ -377,7 +377,7 @@ cat <<EOF > $UserYAMLDir/$UserResourcesDeleteScript
 # Script that will delete all resources for the user $UserName (PV, PVC, POD, Namespace)
 
 echo
-echo "========================================================================================================================================="
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "DELETING RESOURCES FOR USER $UserName..."
 echo
 echo "Warning: PVC deletion may take a minute as it needs to wait for Pod complete deletion"
@@ -409,12 +409,16 @@ echo "Deleting $UserYAMLDir directory"
 echo "rm -rf $UserYAMLDir"
 rm -rf $UserYAMLDir
 
-echo "========================================================================================================================================="
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo
 EOF
 
 chmod u+x $UserYAMLDir/$UserResourcesDeleteScript
 
+echo
+echo "========================================================================================================================================="
+echo "LET'S DO THE JOB:"
+echo "-----------------"
 
 ################################################################################################################
 # CREATING THE NAMESPACE $UserNamespace thanks to $UserYAMLDir/$UserNSCreationFile bash script
@@ -450,7 +454,7 @@ if [ $Verbose -eq 1 ]; then
   echo "  Binary Image PV creation :                 $UserImagesDevice_PvYamlFile"
   echo "  Binary Image PVC creation :                $UserImagesDevice_PvcYamlFile"
   echo "  CAPIapp deployment creation:               $UserYamlFile"
-  echo "========================================================================================================================================="
+  echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 fi
 
 for i in $UserImagesDevice_PvYamlFile $UserImagesDevice_PvcYamlFile $UserYamlFile; do
@@ -467,6 +471,7 @@ done
 
 sleep 2 # Giving some time for resources to be here
 
+echo "========================================================================================================================================="
 
 ################################################################################################################
 # DISPLAYING NEWLY CREATED RESOURCES INFO
