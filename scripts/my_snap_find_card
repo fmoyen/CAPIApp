@@ -1,3 +1,0 @@
-#!/bin/bash
-echo "/opt/snap/software/tools/snap_find_card -AALL -v $*"
-/opt/snap/software/tools/snap_find_card -AALL -v $*

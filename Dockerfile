@@ -22,8 +22,6 @@ RUN make software
 COPY scripts/my_oc_find_card /usr/local/bin
 COPY scripts/my_oc_maint /usr/local/bin
 COPY scripts/my_oc_maint_verbose /usr/local/bin
-COPY scripts/my_snap_find_card /usr/local/bin
-COPY scripts/my_snap_maint /usr/local/bin
 COPY scripts/get_card_id /usr/local/bin
 
 RUN ln -s /opt/oc-accel/software/tools/oc_action_reprogram /usr/bin/oc_action_reprogram
@@ -39,5 +37,4 @@ LABEL name="CAPIApp" \
       url="https://hub.docker.com/repository/docker/fmoyen/capiapp/general"
 
 COPY StayUp.bash /usr/local/bin
-CMD /usr/local/bin/StayUp.bash 
-
+CMD /usr/local/bin/StayUp.bash
