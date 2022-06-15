@@ -12,22 +12,12 @@ RUN dnf groupinstall -y "Development Tools" && dnf clean all -y
 RUN dnf install -y pciutils && dnf clean all -y
 
 WORKDIR /opt
-RUN git clone https://github.com/open-power/snap.git
 RUN git clone https://github.com/OpenCAPI/oc-accel.git
-RUN git clone https://github.com/OpenCAPI/oc-utils.git
-
-WORKDIR /opt/snap
-RUN make software
 
 WORKDIR /opt/oc-accel
 RUN git fetch
 RUN git checkout mmio_partial_reconfig
 RUN make software
-
-WORKDIR /opt/oc-utils
-RUN git fetch
-RUN git checkout container
-RUN make install
 
 COPY scripts/my_oc_find_card /usr/local/bin
 COPY scripts/my_oc_maint /usr/local/bin
@@ -44,7 +34,7 @@ ENV HOME=/home/user
 WORKDIR /home/user
 
 LABEL name="CAPIApp" \
-      release="55" \
+      release="56" \
       summary="Image provided for using OpenCAPI Card in a ppc64le container using Partial Reconfiguration (made from a CentOS Stream container based on the Red Hat Universal Base Image)." \
       url="https://hub.docker.com/repository/docker/fmoyen/capiapp/general"
 
