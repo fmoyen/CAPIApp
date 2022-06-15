@@ -42,6 +42,7 @@ CardOption=0
 DockerPasswordOption=0
 DockerPassword=""
 RealPath=`realpath $0`
+RealPath=`dirname $RealPath`
 
 # Delete the next line to unset 'Montpellier' variable if you are not at Montpellier 
 Montpellier=1
@@ -203,7 +204,7 @@ else    # Montpellier, so directely getting the list of cards from the only IC92
   trap "$TrapCmd" EXIT
 
   echo
-  echo "List of OpenCAPI cards requests / limts on $Node:"
+  echo "List of OpenCAPI cards requests / limits on $Node:"
   echo "--------------------------------------------------"
   echo "(0 means no card has been allocated yet)"
   echo -e "\t\t\t\t requests\tlimits"
@@ -239,7 +240,7 @@ fi
 if `echo $CardFullName | grep -q ocapi`; then
   CardType="Opencapi"
 
-  YamlRootDir="OPENCAPI-user-device_requested/current"
+  YamlRootDir="$RealPath/OPENCAPI-user-device_requested/current"
   SubDir="OCAPI_requested"
   YamlDir=$YamlRootDir/$SubDir
 
@@ -294,7 +295,7 @@ if [ $Verbose -eq 1 ]; then
   echo "  + <CARD_REF>  --> $CardFullName"
   echo "  + <NAMESPACE> --> $UserNamespace"
   echo
-  echo "(from `dirname $RealPath`/$YamlDir yaml files)"
+  echo "(from $YamlDir yaml files)"
 echo "========================================================================================================================================="
 fi
 
@@ -520,7 +521,7 @@ echo "--------------------------------------------------------------------------
 echo "2 choices:"
 echo "---------:"
 echo "  $UserYAMLDir/$UserResourcesDeleteScript   --> Specific to $UserName user (This script will also remove $UserYAMLDir directory)"
-echo "  `dirname $RealPath`/delete_UserResources.bash -u $UserName"
+echo "  $RealPath/delete_UserResources.bash -u $UserName"
 echo "========================================================================================================================================="
 
 echo
