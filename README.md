@@ -2,7 +2,7 @@
 Develop and test a way to use a CAPI/openCAPI adapter in an Openshift App environment.
 
 ## Prerequisite:
-You need to have the OpenCAPIi_as_a_Service Device Plugin up and running
+You need to have the OpenCAPI_as_a_Service Device Plugin up and running
 (This device plugin will advertise the OpenCAPI cards available in the cluster, will allocate the OpenCAPI cards to the Pod requesting them, etc)
 
 ## For generating the docker hub CAPIapp images, run the following script: Build-capiapp.sh
@@ -15,7 +15,7 @@ To do so, have a look at the scripts in ./OpenShift directory (scripts you need 
   - user_CAPIApp.bash: a script that will create a specific namespace for the user, a CAPIApp deployment with a Pod and a CAPIApp container, etc (user_CAPIApp -h for details on how to use it).
   - start_CAPIApp.bash: The script I was using for testing the CAPIApp image, so it only creates a POD/Container into the fabriceproject namespace, allowing me to choose different cards and definition yaml files.
 
-## Remarks
+## Notes
 The last line of the Dockerfile is "CMD /usr/local/bin/StayUp.bash", so the container automatically runs StayUp.bash when starting.
  -> This makes the container staying alive (as the command run never ends). 
 (If you use something like "CMD /bin/bash", the container doesn't stay alive and OpenShift tries to restart it again and again)
