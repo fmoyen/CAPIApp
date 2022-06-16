@@ -1,8 +1,6 @@
 #!/bin/bash
 
 docker_repository="fmoyen/capiapp"
-libocxl_github="git@github.com:OPENCAPI/libocxl.git"
-libocxl_tar_name="libocxl_for_containers.tar.gz"
 ScriptDir=`realpath $0`
 ScriptDir=`dirname $ScriptDir`
 
@@ -10,9 +8,6 @@ echo; echo "====================================================================
 echo "===================================================================================================="
 echo "For generating the CAPPapp application, this script $0 will use following steps:"
 echo
-echo " - Run the git clone $libocxl_github command into /tmp to clone the master branch"
-echo " - from /tmp/libocxl directory, run the make command using the Makefile"
-echo " - from /tmp/libocxl directory, generate the $libocxl_tar_name file and push it into $ScriptDir"
 echo " - Run docker command docker build -t [docker-repository]:[docker-tag] . to create a docker image of the new capiapp"
 echo " - Run docker command docker tag -t [docker-repository]:[docker-tag] [docker-repository]:latest to create a docker image of the new capiapp with latest tag"
 echo " - Check the new generating daemonset docker image with command docker images"
