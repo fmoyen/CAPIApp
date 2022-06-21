@@ -18,8 +18,8 @@ To do so, have a look at the scripts in ./OpenShift directory (scripts you need 
 ## Notes
 The last line of the Dockerfile is "CMD /usr/local/bin/Run_The_APP.bash", so the container automatically runs Run_The_APP.bash when starting.
  -> This makes the container:
-  - 1) first "reset" (clean) the card by installing a generic Partial Reconfiguration image into the card
-  - 2) stay alive (as the command run never ends) if the reset was successful. 
+  - first "reset" (clean) the card by installing a generic Partial Reconfiguration image into the card
+  - stay alive (as the command run never ends) if the reset was successful. 
 (If you use something like "CMD /bin/bash", the container doesn't stay alive and OpenShift tries to restart it again and again)
 
 Initially, the CAPIApp image was using the container-modified https://github.com/OpenCAPI/libocxl library
