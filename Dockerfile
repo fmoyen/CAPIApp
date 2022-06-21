@@ -36,5 +36,5 @@ LABEL name="CAPIApp" \
       summary="Image provided for using OpenCAPI Card in a ppc64le container using Partial Reconfiguration (made from a CentOS Stream container based on the Red Hat Universal Base Image)." \
       url="https://hub.docker.com/repository/docker/fmoyen/capiapp/general"
 
-COPY scripts/StayUp.bash /usr/local/bin
-CMD /usr/local/bin/StayUp.bash
+COPY scripts/Run_the_APP.bash /usr/local/bin
+CMD /usr/local/bin/Run_the_APP.bash
