@@ -41,7 +41,7 @@ function Reset_OC_Card
   (
   echo
   echo "#####################################################################################################################################"
-  echo "RUNNING Reset_OC_Card TOOL"
+  echo "RUNNING Reset_OC_Card FUNCTION"
   echo "(The tool responsible for reseting the card with a generic partial image)"
   date
   echo
@@ -59,8 +59,7 @@ function Reset_OC_Card
   echo "Reseting"
   echo "--------"
   echo "/usr/bin/oc_action_reprogram -f -C $Card -i $PartialBinFile"
-  #/usr/bin/oc_action_reprogram -f -C $Card -i $PartialBinFile
-  /usr/bin/oc_action_reprogram -f -C 2 -i $PartialBinFile
+  /usr/bin/oc_action_reprogram -f -C $Card -i $PartialBinFile
 
   ResetRC=`echo $?`
   if [ $ResetRC -ne 0 ]; then
@@ -68,8 +67,13 @@ function Reset_OC_Card
     echo "##############################################"
     echo "# Reset operation failed (RC=$ResetRC)... EXITING   #"
     echo "##############################################"
-    echo
     exit $ResetRC
+    echo
+  else
+    echo
+    echo "###################################################"
+    echo "# Reset operation success (RC=$ResetRC)... CONTINUING   #"
+    echo "###################################################"
   fi
 
   echo
@@ -81,6 +85,14 @@ function Reset_OC_Card
 
   echo
   ) | tee $ResetLog
+
+  # we need to get back the $ResetRC (Reset Return Code) from the subshell by reading it from the $ResetLog file
+  ResetRC=`grep "RC=" $ResetLog | awk -F "RC=" '{print $2}' | awk -F ")" '{print $1}'`
+  if [ $ResetRC -ne 0 ]; then
+    echo "Exiting..."
+    exit $ResetRC
+  fi
+
 }
 
 
@@ -96,7 +108,7 @@ function StayUp
 
   echo
   echo "#####################################################################################################################################"
-  echo "RUNNING StayUp TOOL"
+  echo "RUNNING StayUp FUNCTION"
   echo "(Just pushing the date to $StayUpLog in a log rotating way in order to keep the container up and running...)"
   date
 
