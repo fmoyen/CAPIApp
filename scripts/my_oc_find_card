@@ -1,15 +1,65 @@
 #!/bin/bash
+######################################################################################################################################################
+# Objective:
+# This script is made to run the standard oc_find_card but for the only card(s) allocated to this container
+# (So does not display the other cards hosted by the node where this container runs but not allocated to this container)
+# Author:
+# Fabrice MOYEN
+######################################################################################################################################################
 
-# Getting the OpenCAPI cards allocated
+######################################################################################################################################################
+# VARIABLES
+
+# Getting the OpenCAPI cards allocated to the container
 IDs=`/usr/local/bin/get_card_id`
+
+######################################################################################################################################################
+# FUNCTIONS
+
+function usage
+{
+  echo
+  echo "===================================================================================================="
+  echo "`basename $0` Usage:"
+  echo "-------------------------"
+  echo
+  echo "This script is made to run the standard oc_find_card but for the only card(s) allocated to this container"
+  echo "(So it does not display the other cards hosted by the node where this container is running but not allocated to this container)"
+  echo
+  echo "  + The parameters below are optional"
+  echo
+  echo "  + -h : shows this usage info"
+  echo
+  echo "Example:"
+  echo "--------"
+  echo "`basename $0`"
+  echo "`basename $0` -h"
+  echo
+  exit 0
+}
+
+######################################################################################################################################################
+# MAIN
+
+while getopts "h" option; do
+  case $option in
+    h)
+      usage
+    ;;
+    *)
+      echo " --> not a specific option for `basename $0`"
+      usage
+    ;;
+  esac
+done
 
 # no OpenCAPI card allocated => exiting
 if [[ "$IDs" = "" ]]; then
-	  echo "No OpenCAPI card allocated found"
-	    exit 66
+          echo "No OpenCAPI card allocated found"
+            exit 66
 fi
 
 #oc_find_card of the only OpenCAPI cards allocated
 for i in $IDs; do
-	  /opt/oc-accel/software/tools/oc_find_card -v -AALL | grep "position: $i" -A6
+          /opt/oc-accel/software/tools/oc_find_card -v -AALL | grep "position: $i" -A6
   done

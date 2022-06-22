@@ -1,11 +1,56 @@
 #!/bin/bash
+######################################################################################################################################################
+# Objective:
+# This script is made to run the standard oc_maint in a Openshift container context
+# Author:
+# Fabrice MOYEN
+######################################################################################################################################################
+
+######################################################################################################################################################
+# VARIABLES
 
 Card=""
 
-while getopts "C:" option; do
+
+######################################################################################################################################################
+# FUNCTIONS
+
+function usage
+{
+  echo
+  echo "===================================================================================================="
+  echo "`basename $0` Usage:"
+  echo "-------------------------"
+  echo
+  echo "This script is made to run the standard oc_maint tool in a Openshift container context"
+  echo
+  echo "  + The parameters below are optional"
+  echo
+  echo "  + -C <OpenCAPI Card position> : gets info about the provided card (if not provided, it will get info about the only card to which this container should have access)"
+  echo "  + -h                          : shows this usage info"
+  echo
+  echo "Example:"
+  echo "--------"
+  echo "`basename $0`"
+  echo "`basename $0` -C4"
+  echo
+  exit 0
+}
+
+
+######################################################################################################################################################
+# MAIN
+
+while getopts "C:h" option; do
   case $option in
     C)
       Card=$OPTARG
+    ;;
+    h)
+      usage
+    ;;
+    *)
+      echo "not a specific option for `basename $0`, so pushing it to the standard oc_maint"
     ;;
   esac
 done

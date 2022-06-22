@@ -32,7 +32,7 @@ ENV HOME=/home/user
 WORKDIR /home/user
 
 LABEL name="CAPIApp" \
-      release="57" \
+      release="61" \
       summary="Image provided for using OpenCAPI Card in a ppc64le container using Partial Reconfiguration (made from a CentOS Stream container based on the Red Hat Universal Base Image)." \
       url="https://hub.docker.com/repository/docker/fmoyen/capiapp/general"
 
