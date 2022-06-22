@@ -1,5 +1,7 @@
 # CAPIApp Objective:
-Develop and test a way to use a CAPI/openCAPI adapter in an Openshift App environment.
+  - Build an App with all what is needed for using an OpenCAPI adapter from a container (ilibocxl, oc-accel, Partial reconfiguration, etc)
+  - Push the App to the docker hub
+  - Provide YAML et bash scripts in order to create an OpenShift user environment (namespace, PV, PVC, POD, etc) using this App
 
 ## Prerequisite:
 You need to have the OpenCAPI_as_a_Service Device Plugin up and running
@@ -12,8 +14,7 @@ The Build-capiapp.sh script is here to generate the capiapp image (thanks to the
 ## Way to use it:
 You need to start an OpenShift Pod running a container with this CAPIApp docker image.
 To do so, have a look at the scripts in ./OpenShift directory (scripts you need to run from an OpenShift client system with access to the cluster)
-  - user_CAPIApp.bash: a script that will create a specific namespace for the user, a CAPIApp deployment with a Pod and a CAPIApp container, etc (user_CAPIApp -h for details on how to use it).
-  - start_CAPIApp.bash: The script I was using for testing the CAPIApp image, so it only creates a POD/Container into the fabriceproject namespace, allowing me to choose different cards and definition yaml files.
+  - user_CAPIApp.bash: a script that will create a specific namespace for the user, a CAPIApp deployment resource with a Pod and a CAPIApp container, etc (user_CAPIApp -h for details on how to use it).
 
 ## Notes
 The last line of the Dockerfile is "CMD /usr/local/bin/Run_The_APP.bash", so the container automatically runs Run_The_APP.bash when starting.
