@@ -11,9 +11,9 @@
 ##############################################################################################################
 # VARIABLES
 
-ScriptsPath=/usr/local/bin
+ToolsPath=/usr/local/bin
 
-Card=`$ScriptsPath/get_card_id`
+Card=`$ToolsPath/get_card_id`
 
 MountDir=`cat /proc/mounts | grep nfs | grep Images | awk '{print $2}'`
 LogDir=$MountDir/Logs
@@ -51,15 +51,15 @@ function Reset_OC_Card
   echo "====================================================================================================================================="
   echo "Card status BEFORE RESET"
   echo "------------------------"
-  echo "$ScriptsPath/my_oc_maint -C $Card"
-  $ScriptsPath/my_oc_maint -C $Card
+  echo "$ToolsPath/my_oc_maint -C $Card"
+  $ToolsPath/my_oc_maint -C $Card
 
   echo
   echo "====================================================================================================================================="
   echo "Reseting"
   echo "--------"
-  echo "/usr/bin/oc_action_reprogram -f -C $Card -i $PartialBinFile"
-  /usr/bin/oc_action_reprogram -f -C $Card -i $PartialBinFile
+  echo "$ToolsPath/oc_action_reprogram -f -C $Card -i $PartialBinFile"
+  $ToolsPath/oc_action_reprogram -f -C $Card -i $PartialBinFile
 
   ResetRC=`echo $?`
   if [ $ResetRC -ne 0 ]; then
@@ -80,8 +80,8 @@ function Reset_OC_Card
   echo "====================================================================================================================================="
   echo "Card status AFTER RESET"
   echo "-----------------------"
-  echo "$ScriptsPath/my_oc_maint -C $Card"
-  $ScriptsPath/my_oc_maint -C $Card
+  echo "$ToolsPath/my_oc_maint -C $Card"
+  $ToolsPath/my_oc_maint -C $Card
 
   echo
   ) | tee $ResetLog
@@ -129,7 +129,7 @@ function StayUp
 
 echo
 echo "#####################################################################################################################################"
-echo "Run_The_APP: That's APP the container starts when initiated"
+echo "Run_The_APP: That's the APP the container starts when initiated"
 echo "(If the APP stops, the container dies)"
 date
 

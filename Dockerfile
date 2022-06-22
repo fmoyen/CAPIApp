@@ -24,7 +24,7 @@ COPY scripts/my_oc_maint /usr/local/bin
 COPY scripts/my_oc_maint_verbose /usr/local/bin
 COPY scripts/get_card_id /usr/local/bin
 
-RUN ln -s /opt/oc-accel/software/tools/oc_action_reprogram /usr/bin/oc_action_reprogram
+RUN ln -s /opt/oc-accel/software/tools/oc_action_reprogram /usr/local/bin/oc_action_reprogram
 
 RUN mkdir /home/user
 RUN chmod g+w /home/user
