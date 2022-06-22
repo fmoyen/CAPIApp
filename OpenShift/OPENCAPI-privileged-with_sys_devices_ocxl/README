@@ -1,8 +1,0 @@
-Warning:
-This is the CAPIapp with full privilege, so working but unacceptable for production-like environment.
-For accessing to OpenCAPI cards, it is needed to mount the corresponding /sys/devices/pci..../00.../ocxlfn..../ocxl directory.
-Here for testing purpose, the /sys/devices/pci0004:00/0004:00:00.1/ocxlfn.0004:00:00.1/ocxl directory mount is hard-coded.
-
-Note:
-You need to define the fabriceproject-service-account service account with SCC privileged authorization.
-

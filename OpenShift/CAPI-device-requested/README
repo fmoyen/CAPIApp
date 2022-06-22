@@ -1,6 +1,0 @@
-# Warning:
-
-  - This is the CAPIapp requesting a CAPI2 U200 card with NO privilege, so it needs to have a device plugin fuctional to work, such as:
-https://github.com/fmoyen/OPENCAPI_as_a_Service
-
-  - The yaml file needs to be modified if the app needs to access another type of CAPI card than the U200 one.
