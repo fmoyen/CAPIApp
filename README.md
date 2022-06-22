@@ -1,5 +1,5 @@
 # CAPIApp Objective:
-  - Build an App with all what is needed for using an OpenCAPI adapter from a container (ilibocxl, oc-accel, Partial reconfiguration, etc)
+  - Build an App with everything you need to use an OpenCAPI adapter from a container (ilibocxl, oc-accel, Partial reconfiguration, etc)
   - Push the App to the docker hub
   - Provide YAML et bash scripts in order to create an OpenShift user environment (namespace, PV, PVC, POD, etc) using this App
 
