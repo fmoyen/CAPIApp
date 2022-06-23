@@ -38,16 +38,18 @@ ImagesDevice_PvcYamlFile=`ls $YamlDir/images-user-pvc.yaml 2>/dev/null`
 UserYAMLRootDir=/tmp
 UserResourcesDeleteScript="deleteUserResources.bash"
 UserNSCreationFile="createUserNamespace.bash"
-MopSecretCreationFile="createMopDockerSecret.bash"
+DockerSecretCreationFile="createDockerSecret.bash"
 
 UserName=""
 UserNamespace=""
 CardType=""
 CardName="nul"
+DockerUser=""
 DockerPassword=""
 
 UserOption=0
 CardOption=0
+DockerUserOption=0
 DockerPasswordOption=0
 
 # Delete the next line to unset 'Montpellier' variable if you are not at Montpellier 
@@ -66,26 +68,33 @@ function usage
   echo
   echo "Bash script used when a standard user wants a POD with an OpenCAPI card"
   echo
+  echo "Needed info to provide:"
+  echo "-----------------------"
   echo "  + No parameters given => `basename $0` asks questions"
   echo "  + Missing parameters  => `basename $0` asks questions to get the missing parameters"
   echo
   echo "  + -u <User Name> : to give your user name"
   echo "  + -c <Card Name> : to give the card type you want"
-  echo "  + -v             : verbose output"
-
-  if [ ! -z ${Montpellier+x} ]; then
-    echo
-    echo "  + -p <Docker Personal Password> : Specific to IBM Montpellier (Docker fmoyen password to download Docker images)"
-  fi
-
   echo
-  echo "  + -h             : shows this usage info"
+  echo "Optional parameters:"
+  echo "--------------------"
+  echo "  + -d <Docker User>     : Docker username to be used by the OpenShift default service account of the user namespace when downloading Docker images"
+  echo "  + -p <Docker Password> : Docker password when downloading Docker images. `basename $0` will ask for it if needed"
+  echo
+  echo "Docker pull rates limits are based on individual IP address. For anonymous users, the rate limit is set to 100 pulls per 6 hours per IP address."
+  echo "  ==> From a company network, the 100 pulls limit may be reached quickly"
+  echo "For Docker authenticated users, it is 200 pulls per 6 hour period per user, which is much better."
+  echo
+  echo "  + -v                   : verbose output"
+  echo "  + -h                   : shows this usage info"
   echo
   echo "Example:"
   echo "--------"
   echo "`basename $0`"
   echo "`basename $0` -u Fabrice"
   echo "`basename $0` -u Fabrice -c ad9h3"
+  echo "`basename $0` -u Fabrice -c ad9h3 -d fmoyen"
+  echo "`basename $0` -u Fabrice -c ad9h3 -d fmoyen -p XXXX -v"
   echo
   exit 0
 }
@@ -95,7 +104,7 @@ function usage
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
 #
 
-while getopts ":u:c:p:vh" option; do
+while getopts ":u:c:d:p:vh" option; do
   case $option in
     u)
       UserName=$OPTARG
@@ -104,6 +113,10 @@ while getopts ":u:c:p:vh" option; do
     c)
       CardName=$OPTARG
       CardOption=1
+    ;;
+    d)
+      DockerUser=$OPTARG
+      DockerUserOption=1
     ;;
     p)
       DockerPassword=$OPTARG
@@ -121,17 +134,6 @@ while getopts ":u:c:p:vh" option; do
     *) echo "Unimplemented option: -$OPTARG" >&2; exit 1;;
   esac
 done
-
-
-################################################################################################################
-# MONTPELLIER OR NOT ?
-
-if [ ! -z ${Montpellier+x} ] && [ $Verbose -eq 1 ]; then
-  echo
-  echo "========================================================================================================================================="
-  echo "MONTPELLIER CLUSTER"
-  echo "========================================================================================================================================="
-fi
 
 
 ################################################################################################################
@@ -161,16 +163,24 @@ UserNamespace="$UserName-project"
 
 
 ################################################################################################################
-# SPECIFIC TO IBM MONTPELLIER: ASKING FOR THE DOCKER fmoyen PASSWORD
+# IF NEEDED, ASKING FOR THE DOCKER PASSWORD OF THE USER $DockerUser
 
-if [ ! -z ${Montpellier+x} ]; then
+if [ $DockerUserOption -eq 1 ]; then
+
+  if [ $Verbose -eq 1 ]; then
+    echo
+    echo "========================================================================================================================================="
+    echo "$DockerUser DOCKER USER HAS BEEN PROVIDED"
+    echo "========================================================================================================================================="
+  fi
+
   if [ $DockerPasswordOption -eq 0 ]; then
     echo
     echo "========================================================================================================================================="
     while [[ "$DockerPassword" == "" ]]; do
       echo
-      echo "What is the Docker fmoyen Password ? :"
-      echo "--------------------------------------"
+      echo "What is the $DockerUser Docker Password ? :"
+      echo "-------------------------------------------"
       read DockerPassword
     done
     echo "========================================================================================================================================="
@@ -179,7 +189,7 @@ if [ ! -z ${Montpellier+x} ]; then
     if [ $Verbose -eq 1 ]; then
       echo
       echo "========================================================================================================================================="
-      echo "DOCKER PASSWORD HAS BEEN PROVIDED"
+      echo "DOCKER PASSWORD HAS BEEN PROVIDED FOR $DockerUser"
       echo "========================================================================================================================================="
     fi
   fi
@@ -325,40 +335,42 @@ chmod u+x $UserYAMLDir/$UserNSCreationFile
 
 
 ################################################################################################################
-# BUILDING THE SCRIPT RESPONSIBLE FOR THE IBM MONTPELLIER SPECIFIC SECRET CREATION
+# BUILDING THE SCRIPT RESPONSIBLE FOR THE DOCKER SPECIFIC SECRET CREATION
 
-if [ ! -z ${Montpellier+x} ]; then
-  cat <<EOF > $UserYAMLDir/$MopSecretCreationFile
+if [ $DockerUserOption -eq 1 ]; then
+  cat <<EOF > $UserYAMLDir/$DockerSecretCreationFile
 #!/bin/bash
 
-# Script responsible for creating the Secret specific to IBM Montpellier
+# Script responsible for creating the Docker Secret and adding it to Default Service Account
 
 echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
-echo "CREATING THE SECRET docker-fmoyen FOR PROJECT $UserNamespace and adding it to Default Service Account..."
+echo "CREATING THE SECRET docker-$DockerUser FOR PROJECT $UserNamespace and adding it to Default Service Account..."
 echo "--------------------------------------------------------------------------------------------------------"
 
-echo "oc -n $UserNamespace create secret docker-registry docker-fmoyen \\\\"
+echo "oc -n $UserNamespace create secret docker-registry docker-$DockerUser \\\\"
 echo "   --docker-server=docker.io  \\\\"
-echo "   --docker-username=fmoyen \\\\"
-echo "   --docker-password=XXXXXXXXX \\\\"
-echo "   --docker-email=fabrice_moyen@fr.ibm.com"
+echo "   --docker-username=$DockerUser \\\\"
+echo "   --docker-password=XXXXXXXXX"
+#echo "   --docker-password=XXXXXXXXX \\\\"
+#echo "   --docker-email=fabrice_moyen@fr.ibm.com"
 
-oc -n $UserNamespace create secret docker-registry docker-fmoyen \
+oc -n $UserNamespace create secret docker-registry docker-$DockerUser \
    --docker-server=docker.io  \
-   --docker-username=fmoyen \
-   --docker-password=$DockerPassword \
-   --docker-email=fabrice_moyen@fr.ibm.com
+   --docker-username=$DockerUser \
+   --docker-password=$DockerPassword
+#   --docker-password=$DockerPassword \
+#   --docker-email=fabrice_moyen@fr.ibm.com
 
 echo
-echo "oc -n $UserNamespace secrets link default docker-fmoyen --for=pull"
+echo "oc -n $UserNamespace secrets link default docker-$DockerUser --for=pull"
 sleep 2 # Giving some time for the default Service Account to be available for update
-oc -n $UserNamespace secrets link default docker-fmoyen --for=pull
+oc -n $UserNamespace secrets link default docker-$DockerUser --for=pull
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 
 EOF
 
-  chmod u+x $UserYAMLDir/$MopSecretCreationFile
+  chmod u+x $UserYAMLDir/$DockerSecretCreationFile
 fi
 
 
@@ -425,14 +437,14 @@ fi
 
 
 ################################################################################################################
-# SPECIFIC TO IBM MONTPELLIER: CREATING A SECRET TO PULL DOCKER IMAGE WITH FMOYEN ID
+# IF NEEDED, CREATING A SECRET TO PULL DOCKER IMAGE WITH $DockerUser ID
 # (THIS TO OVERCOME GLOBAL LIMITATIONS)
 
-if [ ! -z ${Montpellier+x} ]; then
+if [ $DockerUserOption -eq 1 ]; then
   if [ $Verbose -eq 1 ]; then
-    $UserYAMLDir/$MopSecretCreationFile
+    $UserYAMLDir/$DockerSecretCreationFile
   else
-    $UserYAMLDir/$MopSecretCreationFile >/dev/null
+    $UserYAMLDir/$DockerSecretCreationFile >/dev/null
   fi
 fi
 
