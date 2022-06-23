@@ -531,8 +531,12 @@ echo "SCRIPTS TO USE IN ORDER TO DELETE THE USER RESOURCES (PV, PVC, POD, NAMESP
 echo "-------------------------------------------------------------------------------"
 echo "2 choices:"
 echo "---------:"
-echo "  $UserYAMLDir/$UserResourcesDeleteScript   --> Specific to $UserName user (This script will also remove $UserYAMLDir directory)"
-echo "  $RealPath/delete_UserResources.bash -u $UserName"
+echo
+echo "  $UserYAMLDir/$UserResourcesDeleteScript"
+echo "    --> Dedicated script for $UserName user (This script will also delete $UserYAMLDir directory)"
+echo
+echo "  $RealPath/delete_UserResources.bash -u $UserName -d $UserYAMLDir"
+echo "    --> generic script so you need to provide the Username and the directory (where the YAML files and scripts for this user are located) if you want to delete it"
 echo "========================================================================================================================================="
 
 echo

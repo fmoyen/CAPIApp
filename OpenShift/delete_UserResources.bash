@@ -10,8 +10,10 @@
 
 UserName=""
 UserNamespace=""
+UserDir=""
 UserOption=0
-RunOption=0
+DirOption=0
+ForceOption=0
 
 ################################################################################################################
 # FUNCTIONS
@@ -22,13 +24,19 @@ function usage
   echo "`basename $0` Usage:"
   echo "-------------------------"
   echo
-  echo "Bash script used when a standard user wants a POD with an OpenCAPI card"
+  echo "Bash script used when you want to delete the resources of the provided OpensShift user"
   echo
+  echo "Needed info to provide:"
+  echo "-----------------------"
   echo "  + No parameters given => `basename $0` asks questions"
   echo "  + Missing parameters  => `basename $0` asks questions about the missing parameters"
   echo
-  echo "  + -u <User Name> : to give your user name"
-  echo "  + -r             : Dangerous: do not ask for any confirmation before deleting"
+  echo "  + -u <User Name> : the Openshift user name whose resources you want to be deleted"
+  echo
+  echo "Optional parameters:"
+  echo "--------------------"
+  echo "  + -d <directory> : Delete the provided directory (where the YAML files and scripts for this user are located)"
+  echo "  + -f             : DANGEROUS: do not ask for any confirmation before deleting"
   echo
   echo "  + -h : shows this usage info"
   echo
@@ -36,7 +44,8 @@ function usage
   echo "--------"
   echo "`basename $0`"
   echo "`basename $0` -u Fabrice"
-  echo "`basename $0` -u Fabrice -r"
+  echo "`basename $0` -u Fabrice -d /tmp/Fabrice"
+  echo "`basename $0` -u Fabrice -f"
   echo
   exit 0
 }
@@ -46,14 +55,18 @@ function usage
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
 #
 
-while getopts ":u:rh" option; do
+while getopts ":u:d:fh" option; do
   case $option in
     u)
       UserName=$OPTARG
       UserOption=1
     ;;
-    r)
-      RunOption=1
+    d)
+      UserDir=$OPTARG
+      DirOption=1
+    ;;
+    f)
+      ForceOption=1
     ;;
     h)
       usage
@@ -72,8 +85,8 @@ done
 if [ $UserOption -eq 0 ]; then
   while [[ "$UserName" == "" ]]; do
     echo
-    echo "What is the user name ? (user owning the resources you want to delete special character) ? :"
-    echo "--------------------------------------------------------------------------------------------"
+    echo "What is the OpenShift user name ? (the user who owns the resources you want to delete) ? :"
+    echo "------------------------------------------------------------------------------------------"
     read UserName
   done
 
@@ -90,9 +103,12 @@ UserNamespace="$UserName-project"
 ################################################################################################################
 # DELETING THE USER RESOURCES
 
-if [ $RunOption -eq 0 ]; then
+if [ $ForceOption -eq 0 ]; then
   echo
-  echo "WARNING: ARE YOU SURE YOU WANT TO PROCEED DELETING $UserName RESOURCES ??"
+  echo "WARNING: Are you sure you want to proceed deleting $UserName resources ??"
+  if [ $DirOption -eq 1 ]; then
+    echo "         (and also deleting the following directory: $UserDir)"
+  fi
   echo "(Enter or CTRL-C NOW !)"
   read confirmation
 fi
@@ -123,6 +139,12 @@ oc delete persistentvolume/images-$UserName
 echo
 echo "oc delete namespace $UserNamespace"
 oc delete namespace $UserNamespace
+
+# Deleting the user Yaml directory
+echo
+echo "Deleting $UserDir directory"
+echo "rm -rf $UserDir"
+rm -rf $UserDir
 
 echo "========================================================================================================================================="
 echo
