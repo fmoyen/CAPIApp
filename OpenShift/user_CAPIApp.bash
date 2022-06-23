@@ -24,10 +24,13 @@ clear
 
 Verbose=0
 
-TempFile="/tmp/user_CAPIapp.tmp"
-
 RealPath=`realpath $0`
 RealPath=`dirname $RealPath`
+
+CardList=(
+  xilinx.com/fpga-ad9h3_ocapi-0x0667
+  xilinx.com/fpga-ad9h7_ocapi-0x0666
+)
 
 YamlDir="$RealPath/OPENCAPI-user-device_requested/current/OCAPI_requested"
 
@@ -52,7 +55,9 @@ CardOption=0
 DockerUserOption=0
 DockerPasswordOption=0
 
-# Delete the next line to unset 'Montpellier' variable if you are not at Montpellier 
+TempFile="/tmp/user_CAPIapp.tmp"
+
+# Delete/comment the next line to unset 'Montpellier' variable if you are not at Montpellier 
 Montpellier=1
 
 
@@ -204,13 +209,14 @@ TrapCmd="rm -f $TempFile"
 echo
 echo "========================================================================================================================================="
 if [ -z ${Montpellier+x} ]; then    # NOT Montpellier so manually giving the list of available cards in the cluster
-  echo "List of OpenCAPI cards allocatable:"
-  echo "-----------------------------------"
-  cat <<EOF | tee $TempFile
-xilinx.com/fpga-ad9h3_ocapi-0x0667
-xilinx.com/fpga-ad9h7_ocapi-0x0666
-EOF
+  touch $TempFile
   trap "$TrapCmd" EXIT
+
+  echo "List of allocatable OpenCAPI cards:"
+  echo "-----------------------------------"
+  for (( i=0; i<${#CardList[@]}; i++ )); do
+    echo ${CardList[$i]} | tee -a $TempFile
+  done
 
 else    # Montpellier, so directely getting the list of cards from the only IC922 worker node
   Node="hawk08"
