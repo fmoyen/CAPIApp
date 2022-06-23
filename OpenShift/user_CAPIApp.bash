@@ -23,26 +23,32 @@ clear
 # VARIABLES
 
 Verbose=0
-UserName=""
+
 TempFile="/tmp/user_CAPIapp.tmp"
+
+RealPath=`realpath $0`
+RealPath=`dirname $RealPath`
+
+YamlDir="$RealPath/OPENCAPI-user-device_requested/current/OCAPI_requested"
+
+YamlFile=`ls $YamlDir/OPENCAPI-*-deploy.yaml 2>/dev/null | head -1`
+ImagesDevice_PvYamlFile=`ls $YamlDir/images-user-pv.yaml 2>/dev/null`
+ImagesDevice_PvcYamlFile=`ls $YamlDir/images-user-pvc.yaml 2>/dev/null`
+
 UserYAMLRootDir=/tmp
 UserResourcesDeleteScript="deleteUserResources.bash"
-CardName="nul"
-ImagesDevice_PvYamlFile=""
-ImagesDevice_PvcYamlFile=""
 UserNSCreationFile="createUserNamespace.bash"
 MopSecretCreationFile="createMopDockerSecret.bash"
+
+UserName=""
 UserNamespace=""
-YamlRootDir=""
-SubDir="nul"
-YamlDir=""
 CardType=""
+CardName="nul"
+DockerPassword=""
+
 UserOption=0
 CardOption=0
 DockerPasswordOption=0
-DockerPassword=""
-RealPath=`realpath $0`
-RealPath=`dirname $RealPath`
 
 # Delete the next line to unset 'Montpellier' variable if you are not at Montpellier 
 Montpellier=1
@@ -235,23 +241,10 @@ fi
 
 
 ################################################################################################################
-# OPENCAPI CASE
+# OPENCAPI OR CAPI CASE ?
 
 if `echo $CardFullName | grep -q ocapi`; then
   CardType="Opencapi"
-
-  YamlRootDir="$RealPath/OPENCAPI-user-device_requested/current"
-  SubDir="OCAPI_requested"
-  YamlDir=$YamlRootDir/$SubDir
-
-  YamlFile=`ls $YamlDir/OPENCAPI-*-deploy.yaml 2>/dev/null | head -1`
-
-  ImagesDevice_PvYamlFile=`ls $YamlDir/images-user-pv.yaml 2>/dev/null`
-  ImagesDevice_PvcYamlFile=`ls $YamlDir/images-user-pvc.yaml 2>/dev/null`
-
-
-################################################################################################################
-# CAPI CASE
 
 else
   echo "CAPI case not supported"
