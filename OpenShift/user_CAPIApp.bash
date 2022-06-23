@@ -73,8 +73,8 @@ function usage
   echo "  + No parameters given => `basename $0` asks questions"
   echo "  + Missing parameters  => `basename $0` asks questions to get the missing parameters"
   echo
-  echo "  + -u <User Name> : to give your user name"
-  echo "  + -c <Card Name> : to give the card type you want"
+  echo "  + -u <User Name> : the OpenShift user name"
+  echo "  + -c <Card Name> : the type of card requested"
   echo
   echo "Optional parameters:"
   echo "--------------------"
@@ -82,11 +82,11 @@ function usage
   echo "  + -p <Docker Password> : Docker password when downloading Docker images. `basename $0` will ask for it if needed"
   echo
   echo "Docker pull rates limits are based on individual IP address. For anonymous users, the rate limit is set to 100 pulls per 6 hours per IP address."
-  echo "  ==> From a company network, the 100 pulls limit may be reached quickly"
-  echo "For Docker authenticated users, it is 200 pulls per 6 hour period per user, which is much better."
+  echo "  ==> From a corporate network, the 100 pulls limit can be reached quickly"
+  echo "For Docker authenticated users, the rate limit is set to 200 pulls per 6 hour period per user, which is much more confortable."
   echo
   echo "  + -v                   : verbose output"
-  echo "  + -h                   : shows this usage info"
+  echo "  + -h                   : this usage info"
   echo
   echo "Example:"
   echo "--------"
