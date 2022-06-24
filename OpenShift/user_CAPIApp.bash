@@ -27,11 +27,6 @@ Verbose=0
 RealPath=`realpath $0`
 RealPath=`dirname $RealPath`
 
-CardList=(
-  xilinx.com/fpga-ad9h3_ocapi-0x0667
-  xilinx.com/fpga-ad9h7_ocapi-0x0666
-)
-
 YamlDir="$RealPath/OPENCAPI-user-device_requested/current/OCAPI_requested"
 
 YamlFile=`ls $YamlDir/OPENCAPI-*-deploy.yaml 2>/dev/null | head -1`
@@ -56,9 +51,6 @@ DockerUserOption=0
 DockerPasswordOption=0
 
 TempFile="/tmp/user_CAPIapp.tmp"
-
-# Delete/comment the next line to unset 'Montpellier' variable if you are not at Montpellier 
-Montpellier=1
 
 
 ################################################################################################################
@@ -205,40 +197,40 @@ fi
 # CHOOSING THE CARD
 
 TrapCmd="rm -f $TempFile"
+touch $TempFile
+trap "$TrapCmd" EXIT
+
+NodeList=`oc get nodes | grep worker | awk '{print $1}'`
 
 echo
 echo "========================================================================================================================================="
-if [ -z ${Montpellier+x} ]; then    # NOT Montpellier so manually giving the list of available cards in the cluster
-  touch $TempFile
-  trap "$TrapCmd" EXIT
-
-  echo "List of allocatable OpenCAPI cards:"
-  echo "-----------------------------------"
-  for (( i=0; i<${#CardList[@]}; i++ )); do
-    echo ${CardList[$i]} | tee -a $TempFile
-  done
-
-else    # Montpellier, so directely getting the list of cards from the only IC922 worker node
-  Node="hawk08"
-  echo "List of OpenCAPI cards seen by the Device Plugin on $Node:"
-  echo "-----------------------------------------------------------"
-  oc describe node $Node | sed -n '/Capacity:/,/Allocatable/p' | grep xilinx | tee $TempFile
-  trap "$TrapCmd" EXIT
-
+echo "List of OpenCAPI cards seen by the Device Plugin on every node:"
+echo "---------------------------------------------------------------"
+echo
+for Node in $NodeList; do
+  echo $Node  | tee -a $TempFile
+  oc describe node $Node | sed -n '/Capacity:/,/Allocatable/p' | grep xilinx.com | tee -a $TempFile
   echo
-  echo "List of OpenCAPI cards requests / limits on $Node:"
-  echo "--------------------------------------------------"
-  echo "(0 means no card has been allocated yet)"
-  echo -e "\t\t\t\t requests\tlimits"
-  oc describe node $Node | sed -n '/Allocated resources:/,//p' | grep xilinx
-fi
+done
+
+echo
+echo "List of OpenCAPI cards requests / limits on every node:"
+echo "-------------------------------------------------------"
+echo "(0 means no card has been allocated yet)"
+echo
+echo -e "\t\t\t\t requests\tlimits"
+for Node in $NodeList; do
+  echo $Node
+  oc describe node $Node | sed -n '/Allocated resources:/,//p' | grep xilinx.com
+  echo
+done
 
 if [ $CardOption -eq 0 ]; then
   while ! grep -q $CardName $TempFile; do
     echo
     echo "Please choose between the following card type:"
     echo "----------------------------------------------"
-    cat $TempFile | awk -F"-" '{print $2}' | awk -F"_" '{print $1}'
+    cat $TempFile | grep xilinx.com | awk -F"-" '{print $2}' | awk -F"_" '{print $1}' | sort | uniq
     echo -e "?: \c"
     read CardName
   done
