@@ -9,14 +9,16 @@ clear
 
 # We need to:
 #  - ask for the user name
+#  - ask for the type of card requested (like ad9h3)
 #  - generate the namespace (project) with the user name
-#  - generate the POD yaml definition file (project, name, etc)
+#  - give access to the namespace for the user (RBAC Role)
+#  - generate the yaml definition files (project, name, etc)
+#  - generate a script to delete all user/namespace resources when not needed anymore
 #  - generate the PV/PVC pointing to the user binaries directory
 #  - create the POD/container with access to the volume hosting the user partial binaries
 #
-# We need to be able to provide all these info thanks to parameters (without any interactive question)
-#
-# We need to create a script to delete User PV, PVC, deployment and namespace
+# Parameters to adapt to the environment once:
+#  - UserYAMLRootDir : where all the scripts needed to generate the user environment (and to delete it) will be stored
 
 
 ################################################################################################################
@@ -37,6 +39,8 @@ UserYAMLRootDir=/tmp
 UserResourcesDeleteScript="deleteUserResources.bash"
 UserNSCreationFile="createUserNamespace.bash"
 DockerSecretCreationFile="createDockerSecret.bash"
+
+RBACUserRole="edit"
 
 UserName=""
 UserNamespace=""
@@ -388,6 +392,11 @@ echo "Warning: PVC deletion may take a minute as it needs to wait for Pod comple
 echo "         Namespace deletion is also not instantaneous"
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 
+# Removing the RBAC User Role
+echo
+echo "oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace"
+oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace
+
 # Deleting the Deployment (with the ReplicatSet and the Pod coming with it)
 echo
 echo "oc -n $UserNamespace delete deployment.apps/oc-$UserName-$CardName"
@@ -475,7 +484,25 @@ done
 
 sleep 2 # Giving some time for resources to be here
 
+
+
+################################################################################################################
+# ADDING RBAC ROLE FOR USER TO ACCESS THE NAMESPACE
+
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "ADDING \"$RBACUserRole\" RBAC ROLE FOR THE USER $UserName TO ACCESS THE NAMESPACE $UserNamespace"
+  echo "------------------------------------------------------------------------------------------------------------------------"
+fi
+
+echo
+echo "oc adm policy add-role-to-user $RBACUserRole $UserName -n $UserNamespace"
+echo "     (a \"User not found\" warning is normal)"
+oc adm policy add-role-to-user $RBACUserRole $UserName -n $UserNamespace
+
 echo "========================================================================================================================================="
+
 
 ################################################################################################################
 # DISPLAYING NEWLY CREATED RESOURCES INFO

@@ -8,6 +8,7 @@
 ################################################################################################################
 # VARIABLES
 
+RBACUserRole="edit"
 UserName=""
 UserNamespace=""
 UserDir=""
@@ -120,6 +121,11 @@ echo
 echo "Warning: PVC deletion may take a minute as it needs to wait for Pod complete deletion"
 echo "         Namespace deletion is also not instantaneous"
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+
+# Removing the RBAC User Role
+echo
+echo "oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace"
+oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace
 
 # Deleting the Deployment (with the ReplicatSet and the Pod coming with it)
 echo
