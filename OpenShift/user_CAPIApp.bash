@@ -43,6 +43,7 @@ DockerSecretCreationFile="createDockerSecret.bash"
 RBACUserRole="edit"
 
 UserName=""
+UserPassword=""
 UserNamespace=""
 CardType=""
 CardName="nul"
@@ -50,6 +51,7 @@ DockerUser=""
 DockerPassword=""
 
 UserOption=0
+UserPasswordOption=0
 CardOption=0
 DockerUserOption=0
 DockerPasswordOption=0
@@ -74,13 +76,14 @@ function usage
   echo "  + No parameters given => `basename $0` asks questions"
   echo "  + Missing parameters  => `basename $0` asks questions to get the missing parameters"
   echo
-  echo "  + -u <User Name> : the OpenShift user name"
-  echo "  + -c <Card Name> : the type of card requested"
+  echo "  + -u <User Name>     : the OpenShift user name"
+  echo "  + -p <User Password> : the OpenShift user password"
+  echo "  + -c <Card Name>     : the type of card requested"
   echo
   echo "Optional parameters:"
   echo "--------------------"
   echo "  + -d <Docker User>     : Docker username to be used by the OpenShift default service account of the user namespace when downloading Docker images"
-  echo "  + -p <Docker Password> : Docker password when downloading Docker images. `basename $0` will ask for it if needed"
+  echo "  + -s <Docker Password> : Docker password (s= secret) when downloading Docker images. `basename $0` will ask for it if needed"
   echo
   echo "Docker pull rates limits are based on individual IP address. For anonymous users, the rate limit is set to 100 pulls per 6 hours per IP address."
   echo "  ==> From a corporate network, the 100 pulls limit can be reached quickly"
@@ -93,9 +96,9 @@ function usage
   echo "--------"
   echo "`basename $0`"
   echo "`basename $0` -u Fabrice"
-  echo "`basename $0` -u Fabrice -c ad9h3"
+  echo "`basename $0` -u Fabrice -s XXXX -c ad9h3"
   echo "`basename $0` -u Fabrice -c ad9h3 -d fmoyen"
-  echo "`basename $0` -u Fabrice -c ad9h3 -d fmoyen -p XXXX -v"
+  echo "`basename $0` -u Fabrice -s XXXX -c ad9h3 -d fmoyen -s YYYY -v"
   echo
   exit 0
 }
@@ -105,11 +108,15 @@ function usage
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
 #
 
-while getopts ":u:c:d:p:vh" option; do
+while getopts ":u:p:c:d:s:vh" option; do
   case $option in
     u)
       UserName=$OPTARG
       UserOption=1
+    ;;
+    p)
+      UserPassword=$OPTARG
+      UserPasswordOption=1
     ;;
     c)
       CardName=$OPTARG
@@ -119,7 +126,7 @@ while getopts ":u:c:d:p:vh" option; do
       DockerUser=$OPTARG
       DockerUserOption=1
     ;;
-    p)
+    s)
       DockerPassword=$OPTARG
       DockerPasswordOption=1
     ;;
@@ -145,8 +152,8 @@ if [ $UserOption -eq 0 ]; then
   echo "========================================================================================================================================="
   while [[ "$UserName" == "" ]]; do
     echo
-    echo "What is your name ? (no special character) ? :"
-    echo "----------------------------------------------"
+    echo "What is the OpenShift user name ? (no special character) ? :"
+    echo "------------------------------------------------------------"
     read UserName
   done
   echo "========================================================================================================================================="
@@ -161,6 +168,29 @@ else
 fi
 
 UserNamespace="$UserName-project"
+
+################################################################################################################
+# ASKING FOR THE USER PASSWORD
+
+if [ $UserPasswordOption -eq 0 ]; then
+  echo
+  echo "========================================================================================================================================="
+  while [[ "$UserPassword" == "" ]]; do
+    echo
+    echo "What is the $UserName Password ? (no special character) ? :"
+    echo "-----------------------------------------------------------"
+    read UserPassword
+  done
+  echo "========================================================================================================================================="
+
+else
+  if [ $Verbose -eq 1 ]; then
+    echo
+    echo "========================================================================================================================================="
+    echo "OPENSHIFT USER PASSWORD HAS BEEN PROVIDED FOR $UserName"
+    echo "========================================================================================================================================="
+  fi
+fi
 
 
 ################################################################################################################
@@ -208,8 +238,8 @@ NodeList=`oc get nodes | grep worker | awk '{print $1}'`
 
 echo
 echo "========================================================================================================================================="
-echo "List of OpenCAPI cards seen by the Device Plugin on every node:"
-echo "---------------------------------------------------------------"
+echo "List of OpenCAPI cards seen by the Device Plugin on each node:"
+echo "--------------------------------------------------------------"
 echo
 for Node in $NodeList; do
   echo $Node  | tee -a $TempFile
