@@ -14,14 +14,18 @@
 # echo $?
 # 0
 
-oauthInitialConfig=/tmp/oauth_initial.json
-oauthFinalConfig=/tmp/oauth_final.json
+############################################################################################################################
 
+oauthInitialConfig=./oauth_initial.json
+oauthFinalConfig=./oauth_final.json
+
+# Get the oauth initial (current) config in JSON format and write it in $oauthInitialConfig file
 oc get oauth.config.openshift.io/cluster -o json > $oauthInitialConfig
 
-if ! `jq -e -r '.spec.identityProviders' $oauthInitialConfig | grep -q "opfh_htpasswd"`; then  # Test if opfh_htpasswd identity provider is not already defined
+# Test if the "opfh_htpasswd" identity provider is not already defined
+if ! `jq -e -r '.spec.identityProviders' $oauthInitialConfig | grep -q "opfh_htpasswd"`; then
 
-  # Adding the definition of the opfh_htpasswd identity provider (after the potential other Identity Providers already defined)
+  # Add the definition of the opfh_htpasswd identity provider (after the potential other Identity Providers already defined) and write it in $oauthFinalConfig file
   # {it works even if .spec.identityProviders or even .spec does not exist)
   jq '.spec.identityProviders[.spec.identityProviders | length] |= .+ {"htpasswd": {"fileData": {"name": "opfh-htpass-secret"}},"mappingMethod": "claim","name": "opfh_htpasswd","type": "HTPasswd"}' $oauthInitialConfig > $oauthFinalConfig
 
