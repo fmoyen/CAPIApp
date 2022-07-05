@@ -16,8 +16,8 @@
 
 ############################################################################################################################
 
-oauthInitialConfig=./oauth_initial.json
-oauthFinalConfig=./oauth_final.json
+oauthInitialConfig=/tmp/oauth_initial.json
+oauthFinalConfig=/tmp/oauth_final.json
 
 # Get the oauth initial (current) config in JSON format and write it in $oauthInitialConfig file
 oc get oauth.config.openshift.io/cluster -o json > $oauthInitialConfig
