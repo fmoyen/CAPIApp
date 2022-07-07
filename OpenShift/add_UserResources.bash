@@ -165,11 +165,8 @@ function Add_User_Definition
     oc apply -f $OauthFinalConfig
 
   else
-    echo
     echo "Identity Provider \"opfh_htpasswd\" already defined"
-    echo "-------------------------------------------------"
     echo "Doing nothing..."
-    echo
   fi
 }
 
@@ -482,7 +479,7 @@ fi
 cat <<EOF > $UserYAMLDir/$UserResourcesDeleteScript
 #!/bin/bash
 
-# Script that will delete all resources for the user $UserName (PV, PVC, POD, Namespace)
+# Script that will delete all resources for the user $UserName (User, Identity, Htpasswd info, PV, PVC, POD, Namespace)
 
 echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
@@ -494,16 +491,19 @@ echo "--------------------------------------------------------------------------
 
 # Removing the RBAC User Role
 echo
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace"
 oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace
 
 # Deleting the Deployment (with the ReplicatSet and the Pod coming with it)
 echo
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "oc -n $UserNamespace delete deployment.apps/oc-$UserName-$CardName"
 oc -n $UserNamespace delete deployment.apps/oc-$UserName-$CardName
 
 # Deleting PVC & PV
 echo
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "oc -n $UserNamespace delete persistentvolumeclaim/images-$UserName-pvc"
 oc -n $UserNamespace delete persistentvolumeclaim/images-$UserName-pvc
 
@@ -513,11 +513,37 @@ oc delete persistentvolume/images-$UserName
 
 # Deleting the NameSpace
 echo
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "oc delete namespace $UserNamespace"
 oc delete namespace $UserNamespace
 
+# Deleting the user and identity
+trap "rm -f $HtpasswdFile" EXIT
+
+echo
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+echo "oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile"
+oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
+
+echo
+echo "htpasswd -D $HtpasswdFile $UserName"
+htpasswd -D $HtpasswdFile $UserName  # Delete $user info from the htpasswd file
+
+echo
+echo "oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
+oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
+
+echo
+echo "oc delete user $UserName"
+oc delete user $UserName
+
+echo
+echo "oc delete identity opfh_htpasswd:$UserName"
+oc delete identity opfh_htpasswd:$UserName
+
 # Deleting the user Yaml directory
 echo
+echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "Deleting $UserYAMLDir directory"
 echo "rm -rf $UserYAMLDir"
 rm -rf $UserYAMLDir
