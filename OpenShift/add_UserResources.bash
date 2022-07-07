@@ -63,6 +63,7 @@ TempFile="/tmp/user_CAPIapp.tmp"
 # FUNCTIONS
 #
 
+#===============================================================================================================
 function usage
 {
   echo
@@ -101,6 +102,74 @@ function usage
   echo "`basename $0` -u Fabrice -s XXXX -c ad9h3 -d fmoyen -s YYYY -v"
   echo
   exit 0
+}
+
+
+#===============================================================================================================
+function Add_User_Definition
+{
+  local user=$1
+  local password=$2
+  
+  local oauth_initial_config=/tmp/oauth_initial.json
+  local oauth_final_config=/tmp/oauth_final.json
+  local htpasswd_file=/tmp/opfh_users.htpasswd
+
+# FAB: trap / rm des fichiers tmp
+
+  #-------------------------------------------------------------------------------------------------------------
+  # Create a new $htpasswd_file file with $user/$password info AND Create an Openshift secret thanks to the $htpasswd_file file
+  #   OR
+  # Save the users info from the already existing OpenShift secret into $htpasswd_file file AND Add $user/$password info to the file AND update the OpenShift secret with the file
+
+  if ! oc get secret opfh-htpass-secret -n openshift-config > /dev/null 2>&1; then 
+    echo
+    echo "Creating a new OpenShift secret (opfh-htpass-secret) with $user info"
+    echo "--------------------------------------------------------------------------"
+    [ $Verbose -eq 1 ] && echo "htpasswd -c -Bb $htpasswd_file $user XXXX"
+    htpasswd -c -Bb $htpasswd_file $user $password  # Create a new $htpasswd_file file with $user/$password info
+    [ $Verbose -eq 1 ] && echo "oc create secret generic opfh-htpass-secret --from-file=htpasswd=$htpasswd_file -n openshift-config"
+    oc create secret generic opfh-htpass-secret --from-file=htpasswd=$htpasswd_file -n openshift-config  # Create an OpenShift secret for saving the htpasswd users info
+  else
+    echo
+    echo "Updating the already existing OpenShift secret (opfh-htpass-secret) with $user info"
+    echo "------------------------------------------------------------------------------------------"
+    [ $Verbose -eq 1 ] && echo "oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $htpasswd_file"
+    oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $htpasswd_file  # Save the current Openshift secret config into an htpasswd file
+    [ $Verbose -eq 1 ] && echo "htpasswd -Bb $htpasswd_file $user XXXX"
+    htpasswd -Bb $htpasswd_file $user $password  # Add or Update $user/$password info to the htpasswd file
+    [ $Verbose -eq 1 ] && echo "oc create secret generic opfh-htpass-secret --from-file=htpasswd=$htpasswd_file --dry-run=client -o yaml -n openshift-config | oc replace -f -"
+    oc create secret generic opfh-htpass-secret --from-file=htpasswd=$htpasswd_file --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
+  fi
+
+  #-------------------------------------------------------------------------------------------------------------
+  # Update the OAuth Identity Providers configuration with the new secret just created/updated above 
+
+    echo
+    echo "Pushing the Identity Provider to the Authentication Cluster Operator (oauth) if it doesn't already exist"
+    echo "--------------------------------------------------------------------------------------------------------"
+  # Get the oauth initial (current) config in JSON format and write it in $oauth_initial_config file
+  [ $Verbose -eq 1 ] && echo "oc get oauth.config.openshift.io/cluster -o json > $oauth_initial_config"
+  oc get oauth.config.openshift.io/cluster -o json > $oauth_initial_config
+
+  # Test if the "opfh_htpasswd" identity provider is not already defined
+  if ! `jq -e -r '.spec.identityProviders' $oauth_initial_config | grep -q "opfh_htpasswd"`; then
+
+    # Add the definition of the opfh_htpasswd identity provider (after the potential other Identity Providers already defined) and write it in $oauth_final_config file
+    # (this command below works even if .spec.identityProviders or even .spec does not exist yet in OAuth configuration)
+    [ $Verbose -eq 1 ] && echo "jq '.spec.identityProviders[.spec.identityProviders | length] |= .+ {"htpasswd": {"fileData": {"name": "opfh-htpass-secret"}},"mappingMethod": "claim","name": "opfh_htpasswd","type": "HTPasswd"}' $oauth_initial_config > $oauth_final_config"
+    jq '.spec.identityProviders[.spec.identityProviders | length] |= .+ {"htpasswd": {"fileData": {"name": "opfh-htpass-secret"}},"mappingMethod": "claim","name": "opfh_htpasswd","type": "HTPasswd"}' $oauth_initial_config > $oauth_final_config
+
+    [ $Verbose -eq 1 ] && echo "oc apply -f $oauth_final_config"
+    oc apply -f $oauth_final_config
+
+  else
+    echo
+    echo "Identity Provider \"opfh_htpasswd\" already defined"
+    echo "-------------------------------------------------"
+    echo "Doing nothing..."
+    echo
+  fi
 }
 
 
@@ -462,6 +531,20 @@ echo
 echo "========================================================================================================================================="
 echo "LET'S DO THE JOB:"
 echo "-----------------"
+
+################################################################################################################
+# CREATING THE USER THANKS TO AN HTPASSWD IDENTITY PROVIDER
+
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "CREATING THE USER $UserName THANKS TO AN HTPASSWD IDENTITY PROVIDER"
+  echo "-------------------------------------------------------------------------------"
+fi
+
+Add_User_Definition $UserName $UserPassword
+
+
 
 ################################################################################################################
 # CREATING THE NAMESPACE $UserNamespace thanks to $UserYAMLDir/$UserNSCreationFile bash script
