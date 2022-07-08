@@ -533,20 +533,20 @@ echo "oc delete namespace $UserNamespace"
 oc delete namespace $UserNamespace
 
 # Deleting the user and identity
-trap "rm -f delete_$HtpasswdFile" EXIT
+trap "rm -f $HtpasswdFile" EXIT
 
 echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
-echo "oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > delete_$HtpasswdFile"
-oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > delete_$HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
+echo "oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile"
+oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
 
 echo
-echo "htpasswd -D delete_$HtpasswdFile $UserName"
-htpasswd -D delete_$HtpasswdFile $UserName  # Delete $user info from the htpasswd file
+echo "htpasswd -D $HtpasswdFile $UserName"
+htpasswd -D $HtpasswdFile $UserName  # Delete $user info from the htpasswd file
 
 echo
-echo "oc create secret generic $SecretName --from-file=htpasswd=delete_$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
-oc create secret generic $SecretName --from-file=htpasswd=delete_$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
+echo "oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
+oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
 
 echo
 echo "oc delete user $UserName"
