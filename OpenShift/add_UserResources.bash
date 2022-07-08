@@ -24,7 +24,19 @@ clear
 ################################################################################################################
 # VARIABLES
 
-Verbose=0
+#---------------------------------------------------------------------------------------------------------------
+# Variables you may want to change
+
+# Root directory where to store the user YAML & bash files to create and delete the user's resources
+UserYAMLRootDir=/tmp
+
+# The name used for the htpasswd Identity Provider we're going to create (Warning: once created, you will need to manually delete it if you decide to change this variable afterwards)
+IDProviderName="opfh-htpasswd"
+
+RBACUserRole="edit"
+
+#---------------------------------------------------------------------------------------------------------------
+# Variables you don't need to change
 
 RealPath=`realpath $0`
 RealPath=`dirname $RealPath`
@@ -35,12 +47,11 @@ YamlFile=`ls $YamlDir/OPENCAPI-*-deploy.yaml 2>/dev/null | head -1`
 ImagesDevice_PvYamlFile=`ls $YamlDir/images-user-pv.yaml 2>/dev/null`
 ImagesDevice_PvcYamlFile=`ls $YamlDir/images-user-pvc.yaml 2>/dev/null`
 
-UserYAMLRootDir=/tmp
 UserResourcesDeleteScript="deleteUserResources.bash"
 UserNSCreationFile="createUserNamespace.bash"
 DockerSecretCreationFile="createDockerSecret.bash"
 
-RBACUserRole="edit"
+SecretName="${IDProviderName}-secret"
 
 UserName=""
 UserPassword=""
@@ -56,11 +67,13 @@ CardOption=0
 DockerUserOption=0
 DockerPasswordOption=0
 
+Verbose=0
+
 TempDir=/tmp
 TempFile=$TempDir/user_CAPIapp.tmp
 OauthInitialConfig=$TempDir/oauth_initial.json
 OauthFinalConfig=$TempDir/oauth_final.json
-HtpasswdFile=$TempDir/opfh_users.htpasswd
+HtpasswdFile=$TempDir/users.htpasswd
 
 
 ################################################################################################################
@@ -123,24 +136,24 @@ function Add_User_Definition
   #   OR
   # Save the users info from the already existing OpenShift secret into $HtpasswdFile file AND Add $user/$password info to the file AND update the OpenShift secret with the file
 
-  if ! oc get secret opfh-htpass-secret -n openshift-config > /dev/null 2>&1; then 
+  if ! oc get secret $SecretName -n openshift-config > /dev/null 2>&1; then 
     echo
-    echo "Creating a new OpenShift secret (opfh-htpass-secret) with $user info"
+    echo "Creating a new OpenShift secret ($SecretName) with $user info"
     echo "--------------------------------------------------------------------------"
     [ $Verbose -eq 1 ] && echo "htpasswd -c -Bb $HtpasswdFile $user XXXX"
     htpasswd -c -Bb $HtpasswdFile $user $password  # Create a new $HtpasswdFile file with $user/$password info
-    [ $Verbose -eq 1 ] && echo && echo "oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile -n openshift-config"
-    oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile -n openshift-config  # Create an OpenShift secret for saving the htpasswd users info
+    [ $Verbose -eq 1 ] && echo && echo "oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile -n openshift-config"
+    oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile -n openshift-config  # Create an OpenShift secret for saving the htpasswd users info
   else
     echo
-    echo "Updating the already existing OpenShift secret (opfh-htpass-secret) with $user info"
+    echo "Updating the already existing OpenShift secret ($SecretName) with $user info"
     echo "------------------------------------------------------------------------------------------"
-    [ $Verbose -eq 1 ] && echo "oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile"
-    oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
+    [ $Verbose -eq 1 ] && echo "oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile"
+    oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
     [ $Verbose -eq 1 ] && echo && echo "htpasswd -Bb $HtpasswdFile $user XXXX"
     htpasswd -Bb $HtpasswdFile $user $password  # Add or Update $user/$password info to the htpasswd file
-    [ $Verbose -eq 1 ] && echo && echo "oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
-    oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
+    [ $Verbose -eq 1 ] && echo && echo "oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
+    oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
   fi
 
   #-------------------------------------------------------------------------------------------------------------
@@ -153,19 +166,21 @@ function Add_User_Definition
   [ $Verbose -eq 1 ] && echo "oc get oauth.config.openshift.io/cluster -o json > $OauthInitialConfig"
   oc get oauth.config.openshift.io/cluster -o json > $OauthInitialConfig
 
-  # Test if the "opfh_htpasswd" identity provider is not already defined
-  if ! `jq -e -r '.spec.identityProviders' $OauthInitialConfig | grep -q "opfh_htpasswd"`; then
+  # Test if the $IDProviderName identity provider is not already defined
+  if ! `jq -e -r '.spec.identityProviders' $OauthInitialConfig | grep -q $IDProviderName`; then
 
-    # Add the definition of the opfh_htpasswd identity provider (after the potential other Identity Providers already defined) and write it in $OauthFinalConfig file
+    # Add the definition of the $IDProviderName identity provider (after the potential other Identity Providers already defined) and write it in $OauthFinalConfig file
     # (this command below works even if .spec.identityProviders or even .spec does not exist yet in OAuth configuration)
-    [ $Verbose -eq 1 ] && echo && echo "jq '.spec.identityProviders[.spec.identityProviders | length] |= .+ {"htpasswd": {"fileData": {"name": "opfh-htpass-secret"}},"mappingMethod": "claim","name": "opfh_htpasswd","type": "HTPasswd"}' $OauthInitialConfig > $OauthFinalConfig"
-    jq '.spec.identityProviders[.spec.identityProviders | length] |= .+ {"htpasswd": {"fileData": {"name": "opfh-htpass-secret"}},"mappingMethod": "claim","name": "opfh_htpasswd","type": "HTPasswd"}' $OauthInitialConfig > $OauthFinalConfig
+    [ $Verbose -eq 1 ] && echo && echo "jq '.spec.identityProviders[.spec.identityProviders | length] |= .+ {\"htpasswd\": {\"fileData\": {\"name\": \"$SecretName\"}},\"mappingMethod\": \"claim\",\"name\": \"$IDProviderName\",\"type\": \"HTPasswd\"}' $OauthInitialConfig > $OauthFinalConfig"
 
-    [ $Verbose -eq 1 ] && echo && echo "oc apply -f $OauthFinalConfig"
+    CMD="jq '.spec.identityProviders[.spec.identityProviders | length] |= .+ {\"htpasswd\": {\"fileData\": {\"name\": \"$SecretName\"}},\"mappingMethod\": \"claim\",\"name\": \"$IDProviderName\",\"type\": \"HTPasswd\"}' $OauthInitialConfig > $OauthFinalConfig"
+    eval $CMD
+
+    [ $Verbose -eq 1 ] && echo && echo "oc apply -f $OauthFinalConfig" && echo "(The Oauth Cluster Operator may take about 5 minutes to apply the changes)"
     oc apply -f $OauthFinalConfig
 
   else
-    echo "Identity Provider \"opfh_htpasswd\" already defined"
+    echo "Identity Provider \"$IDProviderName\" already defined"
     echo "Doing nothing..."
   fi
 }
@@ -518,28 +533,28 @@ echo "oc delete namespace $UserNamespace"
 oc delete namespace $UserNamespace
 
 # Deleting the user and identity
-trap "rm -f $HtpasswdFile" EXIT
+trap "rm -f delete_$HtpasswdFile" EXIT
 
 echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
-echo "oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile"
-oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
+echo "oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > delete_$HtpasswdFile"
+oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > delete_$HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
 
 echo
-echo "htpasswd -D $HtpasswdFile $UserName"
-htpasswd -D $HtpasswdFile $UserName  # Delete $user info from the htpasswd file
+echo "htpasswd -D delete_$HtpasswdFile $UserName"
+htpasswd -D delete_$HtpasswdFile $UserName  # Delete $user info from the htpasswd file
 
 echo
-echo "oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
-oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
+echo "oc create secret generic $SecretName --from-file=htpasswd=delete_$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
+oc create secret generic $SecretName --from-file=htpasswd=delete_$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
 
 echo
 echo "oc delete user $UserName"
 oc delete user $UserName
 
 echo
-echo "oc delete identity opfh_htpasswd:$UserName"
-oc delete identity opfh_htpasswd:$UserName
+echo "oc delete identity $IDProviderName:$UserName"
+oc delete identity $IDProviderName:$UserName
 
 # Deleting the user Yaml directory
 echo

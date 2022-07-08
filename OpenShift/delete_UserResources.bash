@@ -8,7 +8,19 @@
 ################################################################################################################
 # VARIABLES
 
+#---------------------------------------------------------------------------------------------------------------
+# Variables you may want to change
+
+# The name used for the htpasswd Identity Provider we've created
+IDProviderName="opfh-htpasswd"
+
 RBACUserRole="edit"
+
+#---------------------------------------------------------------------------------------------------------------
+# Variables you don't need to change
+
+SecretName="${IDProviderName}-secret"
+
 UserName=""
 UserNamespace=""
 UserDir=""
@@ -17,7 +29,7 @@ DirOption=0
 ForceOption=0
 
 TempDir=/tmp
-HtpasswdFile=$TempDir/opfh_users.htpasswd
+HtpasswdFile=$TempDir/users.htpasswd
 
 ################################################################################################################
 # FUNCTIONS
@@ -158,31 +170,33 @@ trap "rm -f $HtpasswdFile" EXIT
 
 echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
-echo "oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile"
-oc get secret opfh-htpass-secret -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
+echo "oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile"
+oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
 
 echo
 echo "htpasswd -D $HtpasswdFile $UserName"
 htpasswd -D $HtpasswdFile $UserName  # Delete $user info from the htpasswd file
 
 echo
-echo "oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
-oc create secret generic opfh-htpass-secret --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
+echo "oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -"
+oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile --dry-run=client -o yaml -n openshift-config | oc replace -f -  # update the Openshift secret config
 
 echo
 echo "oc delete user $UserName"
 oc delete user $UserName
 
 echo
-echo "oc delete identity opfh_htpasswd:$UserName"
-oc delete identity opfh_htpasswd:$UserName
+echo "oc delete identity $IDProviderName:$UserName"
+oc delete identity $IDProviderName:$UserName
 
 # Deleting the user Yaml directory
-echo
-echo "-----------------------------------------------------------------------------------------------------------------------------------------"
-echo "Deleting $UserDir directory"
-echo "rm -rf $UserDir"
-rm -rf $UserDir
+if [ $DirOption -eq 1 ]; then
+  echo
+  echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+  echo "Deleting $UserDir directory"
+  echo "rm -rf $UserDir"
+  rm -rf $UserDir
+fi
 
 echo "========================================================================================================================================="
 echo
