@@ -19,9 +19,9 @@ RUN git fetch
 RUN git checkout mmio_partial_reconfig
 RUN make software
 
-COPY scripts/my_oc_find_card /usr/local/bin
-COPY scripts/my_oc_maint /usr/local/bin
-COPY scripts/my_oc_maint_verbose /usr/local/bin
+COPY scripts/ocapi_find_card /usr/local/bin
+COPY scripts/ocapi_maint /usr/local/bin
+COPY scripts/ocapi_maint_verbose /usr/local/bin
 COPY scripts/get_card_id /usr/local/bin
 
 RUN ln -s /opt/oc-accel/software/tools/oc_action_reprogram /usr/local/bin/oc_action_reprogram

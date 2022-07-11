@@ -51,8 +51,8 @@ function Reset_OC_Card
   echo "====================================================================================================================================="
   echo "Card status BEFORE RESET"
   echo "------------------------"
-  echo "$ToolsPath/my_oc_maint -C $Card"
-  $ToolsPath/my_oc_maint -C $Card
+  echo "$ToolsPath/ocapi_maint -C $Card"
+  $ToolsPath/ocapi_maint -C $Card
 
   echo
   echo "====================================================================================================================================="
@@ -80,8 +80,8 @@ function Reset_OC_Card
   echo "====================================================================================================================================="
   echo "Card status AFTER RESET"
   echo "-----------------------"
-  echo "$ToolsPath/my_oc_maint -C $Card"
-  $ToolsPath/my_oc_maint -C $Card
+  echo "$ToolsPath/ocapi_maint -C $Card"
+  $ToolsPath/ocapi_maint -C $Card
 
   echo
   ) | tee $ResetLog

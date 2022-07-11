@@ -1,3 +1,0 @@
-#!/bin/bash
-echo "LIBOCXL_VERBOSE_ERRORS_ALL=1 my_oc_maint $*"
-LIBOCXL_VERBOSE_ERRORS_ALL=1 my_oc_maint $*
