@@ -33,9 +33,6 @@ UserYAMLRootDir=/tmp
 # The name used for the htpasswd Identity Provider we're going to create (Warning: once created, you will need to manually delete it if you decide to change this variable afterwards)
 IDProviderName="opfh-htpasswd"
 
-RBACUserRole="edit"
-#RBACUserRole="basic-user"
-
 #---------------------------------------------------------------------------------------------------------------
 # Variables you don't need to change
 
@@ -51,6 +48,10 @@ ImagesDevice_PvcYamlFile=`ls $YamlDir/images-user-pvc.yaml 2>/dev/null`
 UserResourcesDeleteScript="deleteUserResources.bash"
 UserNSCreationFile="createUserNamespace.bash"
 DockerSecretCreationFile="createDockerSecret.bash"
+
+# Giving only "view" role to user (so he cannot create a new POD, or delete the POD, etc... but also cannot connect to the POD terminal, and that's an issue)
+# (we'll create for the project a new "pod-shell" role that will allow the user to "oc rsh" to the POD or use the OCP GUI to connect to the POD terminal. That's not allowed by the "view" role)
+RBACUserRole="view"
 
 SecretName="${IDProviderName}-secret"
 
@@ -204,6 +205,32 @@ function Remove_selfprovisioner
     echo "The self-provisioner cluster role has already been removed from the group system:authenticated:oauth"
     echo "Doing nothing..."
   fi
+}
+
+
+#===============================================================================================================
+# We create a "pod-shell" role for the project and add this role to the user; this in order to allow the user to "oc rsh" the POD or connect to the POD terminal using the GUI
+
+function Create_podshell
+{
+  local user=$1
+  local project=$2
+
+  # Creating the pod-shell role for the $project
+  cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: $project
+  name: pod-shell
+rules:
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create", "get"]
+EOF
+
+  # Adding the $project role "pod-shell" to the $user
+  oc adm policy add-role-to-user pod-shell $user --role-namespace=$project -n $project
 }
 
 ################################################################################################################
@@ -520,15 +547,19 @@ echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "DELETING RESOURCES FOR USER $UserName..."
 echo
-echo "Warning: PVC deletion may take a minute as it needs to wait for Pod complete deletion"
-echo "         Namespace deletion is also not instantaneous"
+echo "Warning:"
+echo "  Some deletion operations such as deleting PVC and namespace, may not be instantaneous"
+echo "  (for example, PVC deletion needs to wait for Pod complete deletion)"
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 
-# Removing the RBAC User Role
+# Removing the RBAC User Roles
 echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace"
 oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace
+echo
+oc "oc adm policy remove-role-from-user pod-shell $UserName --role-namespace=$UserNamespace -n $UserNamespace"
+oc adm policy remove-role-from-user pod-shell $UserName --role-namespace=$UserNamespace -n $UserNamespace
 
 # Deleting the Deployment (with the ReplicatSet and the Pod coming with it)
 echo
@@ -670,7 +701,6 @@ done
 sleep 2 # Giving some time for resources to be here
 
 
-
 ################################################################################################################
 # ADDING RBAC ROLE FOR USER TO ACCESS THE NAMESPACE
 
@@ -683,8 +713,21 @@ fi
 
 echo
 echo "oc adm policy add-role-to-user $RBACUserRole $UserName -n $UserNamespace"
-echo "     (a \"User not found\" warning is normal)"
+echo "     (\"User not found\" warning is normal)"
 oc adm policy add-role-to-user $RBACUserRole $UserName -n $UserNamespace
+
+
+################################################################################################################
+# CREATING THE pod-shell ROLE FOR THE PROJECT AND GIVING THIS ROLE TO THE USER
+
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "CREATING \"pod-shell\" ROLE FOR THE PROJECT $UserNamespace AND GIVE IT TO THE USER $UserName"
+  echo "------------------------------------------------------------------------------------------------------------------------"
+fi
+
+Create_podshell $UserName $UserNamespace
 
 echo "========================================================================================================================================="
 

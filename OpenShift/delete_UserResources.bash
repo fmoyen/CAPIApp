@@ -14,7 +14,7 @@
 # The name used for the htpasswd Identity Provider we've created
 IDProviderName="opfh-htpasswd"
 
-RBACUserRole="edit"
+RBACUserRole="view"
 
 #---------------------------------------------------------------------------------------------------------------
 # Variables you don't need to change
@@ -137,11 +137,14 @@ echo "Warning: PVC deletion may take a minute as it needs to wait for Pod comple
 echo "         Namespace deletion is also not instantaneous"
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 
-# Removing the RBAC User Role
+# Removing the RBAC User Roles
 echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 echo "oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace"
 oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace
+echo
+echo "oc adm policy remove-role-from-user pod-shell $UserName --role-namespace=$UserNamespace -n $UserNamespace"
+oc adm policy remove-role-from-user pod-shell $UserName --role-namespace=$UserNamespace -n $UserNamespace
 
 # Deleting the Deployment (with the ReplicatSet and the Pod coming with it)
 echo
