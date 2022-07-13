@@ -34,6 +34,7 @@ UserYAMLRootDir=/tmp
 IDProviderName="opfh-htpasswd"
 
 RBACUserRole="edit"
+#RBACUserRole="basic-user"
 
 #---------------------------------------------------------------------------------------------------------------
 # Variables you don't need to change
@@ -185,6 +186,25 @@ function Add_User_Definition
   fi
 }
 
+
+#===============================================================================================================
+# We need to remove the self-provisioner cluster role from the group system:authenticated:oauth
+# in order to disallow any OpenShift user to have default permission to create a new project
+
+function Remove_selfprovisioner
+{
+  echo
+  echo "Disallowing any OpenShift user to have default permission to create a new project"
+  echo "---------------------------------------------------------------------------------" 
+
+  if oc describe clusterrolebinding.rbac self-provisioners | grep -q "system:authenticated:oauth"; then
+    oc patch clusterrolebinding.rbac self-provisioners -p '{"subjects": null}'
+
+  else
+    echo "The self-provisioner cluster role has already been removed from the group system:authenticated:oauth"
+    echo "Doing nothing..."
+  fi
+}
 
 ################################################################################################################
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
@@ -573,6 +593,14 @@ echo
 echo "========================================================================================================================================="
 echo "LET'S DO THE JOB:"
 echo "-----------------"
+
+################################################################################################################
+# DISALLOW ANY OPENSHIFT USER TO HAVE DEFAULT PERMISSION TO CREATE A NEW PROJECT
+if [ $Verbose -eq 1 ]; then
+  Remove_selfprovisioner
+else
+  Remove_selfprovisioner > /dev/null 2>&1
+fi
 
 ################################################################################################################
 # CREATING THE USER THANKS TO AN HTPASSWD IDENTITY PROVIDER
