@@ -1,8 +1,5 @@
 #!/bin/bash
 
-clear
-
-
 ################################################################################################################
 # Bash script used when a standard user wants a POD with an OpenCAPI card
 # Author: Fabrice MOYEN (IBM)
@@ -199,6 +196,7 @@ function Remove_selfprovisioner
   echo "---------------------------------------------------------------------------------" 
 
   if oc describe clusterrolebinding.rbac self-provisioners | grep -q "system:authenticated:oauth"; then
+    [ $Verbose -eq 1 ] && echo "oc patch clusterrolebinding.rbac self-provisioners -p '{\"subjects\": null}'"
     oc patch clusterrolebinding.rbac self-provisioners -p '{"subjects": null}'
 
   else
@@ -217,6 +215,25 @@ function Create_podshell
   local project=$2
 
   # Creating the pod-shell role for the $project
+  echo
+  echo "Creating the \"pod-shell\" role for the $project project:"
+  echo "---------------------------------------------------------"
+
+  if [ $Verbose -eq 1 ]; then
+    echo "  cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: $project
+  name: pod-shell
+rules:
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create", "get"]
+EOF
+"
+  fi
+
   cat <<EOF | oc apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -230,8 +247,13 @@ rules:
 EOF
 
   # Adding the $project role "pod-shell" to the $user
+  echo
+  echo "Adding the \"pod-shell\" role to the $user user ('User not found' warning is normal):"
+  echo "---------------------------------------------------------------------------------------"
+  [ $Verbose -eq 1 ] && echo "oc adm policy add-role-to-user pod-shell $user --role-namespace=$project -n $project"
   oc adm policy add-role-to-user pod-shell $user --role-namespace=$project -n $project
 }
+
 
 ################################################################################################################
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
@@ -274,25 +296,27 @@ done
 
 
 ################################################################################################################
+# REAL MAIN STARTS HERE
+
+clear
+echo "========================================================================================================================================="
+
+
+################################################################################################################
 # ASKING FOR THE USER NAME
 
 if [ $UserOption -eq 0 ]; then
-  echo
-  echo "========================================================================================================================================="
   while [[ "$UserName" == "" ]]; do
     echo
     echo "What is the OpenShift user name ? (no special character) ? :"
     echo "------------------------------------------------------------"
     read UserName
   done
-  echo "========================================================================================================================================="
 
 else
   if [ $Verbose -eq 1 ]; then
     echo
-    echo "========================================================================================================================================="
-    echo "USER NAME: $UserName"
-    echo "========================================================================================================================================="
+    echo "User Name: $UserName"
   fi
 fi
 
@@ -303,21 +327,16 @@ UserNamespace="$UserName-project"
 
 if [ $UserPasswordOption -eq 0 ]; then
   echo
-  echo "========================================================================================================================================="
   while [[ "$UserPassword" == "" ]]; do
     echo
     echo "What is the $UserName Password ? (no special character) ? :"
     echo "-----------------------------------------------------------"
     read UserPassword
   done
-  echo "========================================================================================================================================="
 
 else
   if [ $Verbose -eq 1 ]; then
-    echo
-    echo "========================================================================================================================================="
-    echo "OPENSHIFT USER PASSWORD HAS BEEN PROVIDED FOR $UserName"
-    echo "========================================================================================================================================="
+    echo "OpenShift user password has been provided for $UserName"
   fi
 fi
 
@@ -329,31 +348,27 @@ if [ $DockerUserOption -eq 1 ]; then
 
   if [ $Verbose -eq 1 ]; then
     echo
-    echo "========================================================================================================================================="
-    echo "$DockerUser DOCKER USER HAS BEEN PROVIDED"
-    echo "========================================================================================================================================="
+    echo "$DockerUser docker user has been provided"
   fi
 
   if [ $DockerPasswordOption -eq 0 ]; then
-    echo
-    echo "========================================================================================================================================="
     while [[ "$DockerPassword" == "" ]]; do
       echo
       echo "What is the $DockerUser Docker Password ? :"
       echo "-------------------------------------------"
       read DockerPassword
     done
-    echo "========================================================================================================================================="
 
   else
     if [ $Verbose -eq 1 ]; then
-      echo
-      echo "========================================================================================================================================="
-      echo "DOCKER PASSWORD HAS BEEN PROVIDED FOR $DockerUser"
-      echo "========================================================================================================================================="
+      echo "Docker password has been provided for $DockerUser"
     fi
   fi
 fi
+
+echo
+echo "All user and password settings have been provided"
+echo "========================================================================================================================================="
 
 
 ################################################################################################################
@@ -404,10 +419,8 @@ CardFullName=`grep $CardName $TempFile | awk -F":" '{print $1}' | sed 's/ //g'`
 
 if [ $Verbose -eq 1 ]; then
   echo
-  echo "========================================================================================================================================="
-  echo "CARD CHOICE                        : $CardName" 
-  echo "FULL REFERENCE FOR THE CHOSEN CARD : $CardFullName"
-  echo "========================================================================================================================================="
+  echo "Card choice                        : $CardName" 
+  echo "Full reference for the chosen card : $CardFullName"
 fi
 
 
@@ -428,11 +441,9 @@ fi
 
 if [ $Verbose -eq 1 ]; then
   echo
-  echo "========================================================================================================================================="
   echo "Type of card:"
   echo "-------------"
   echo " --> $CardType"
-  echo "========================================================================================================================================="
 fi
 
 
@@ -452,15 +463,15 @@ mkdir -p $UserYAMLDir
 if [ $Verbose -eq 1 ]; then
   echo
   echo "========================================================================================================================================="
-  echo "Building the User/Card specific yaml definition files replacing:"
-  echo "----------------------------------------------------------------"
+  echo "Building the User/Card specific yaml definition files:"
+  echo "------------------------------------------------------"
+  echo "Replacing..."
   echo "  + <USER>      --> $UserName"
   echo "  + <CARD>      --> $CardName"
   echo "  + <CARD_REF>  --> $CardFullName"
   echo "  + <NAMESPACE> --> $UserNamespace"
   echo
-  echo "(from $YamlDir yaml files)"
-echo "========================================================================================================================================="
+  echo "from $YamlDir yaml files"
 fi
 
 for file in $ImagesDevice_PvYamlFile $ImagesDevice_PvcYamlFile $YamlFile; do
@@ -471,9 +482,19 @@ UserImagesDevice_PvYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvYamlFile`"
 UserImagesDevice_PvcYamlFile="$UserYAMLDir/`basename $ImagesDevice_PvcYamlFile`"
 UserYamlFile="$UserYAMLDir/`basename $YamlFile`"
 
+[ $Verbose -eq 1 ] && echo "========================================================================================================================================="
+
 
 ################################################################################################################
 # BUILDING THE SCRIPT RESPONSIBLE FOR THE NAMESPACE CREATION
+
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "Building the script responsible for the namespace creation:"
+  echo "-----------------------------------------------------------"
+  echo "  --> $UserYAMLDir/$UserNSCreationFile"
+fi
 
 cat <<EOF > $UserYAMLDir/$UserNSCreationFile
 #!/bin/bash
@@ -497,6 +518,14 @@ chmod u+x $UserYAMLDir/$UserNSCreationFile
 
 ################################################################################################################
 # BUILDING THE SCRIPT RESPONSIBLE FOR THE DOCKER SPECIFIC SECRET CREATION
+
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "Building the script responsible for the docker specific secret creation:"
+  echo "------------------------------------------------------------------------"
+  echo "  --> $UserYAMLDir/$DockerSecretCreationFile"
+fi
 
 if [ $DockerUserOption -eq 1 ]; then
   cat <<EOF > $UserYAMLDir/$DockerSecretCreationFile
@@ -538,13 +567,21 @@ fi
 ################################################################################################################
 # BUILDING THE SCRIPT THAT WILL BE RESPONSIBLE FOR DELETING ALL USER RESOURCES (PV, PVC, POD, NAMESPACE)
 
+if [ $Verbose -eq 1 ]; then
+  echo
+  echo "========================================================================================================================================="
+  echo "Building the script that will be responsible for deleting all user resources (PV, PVC, POD, NAMESPACE, USER, etc):"
+  echo "------------------------------------------------------------------------------------------------------------------"
+  echo "  --> $UserYAMLDir/$UserResourcesDeleteScript"
+fi
+
 cat <<EOF > $UserYAMLDir/$UserResourcesDeleteScript
 #!/bin/bash
 
 # Script that will delete all resources for the user $UserName (User, Identity, Htpasswd info, PV, PVC, POD, Namespace)
 
-echo
-echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+clear
+echo "========================================================================================================================================="
 echo "DELETING RESOURCES FOR USER $UserName..."
 echo
 echo "Warning:"
@@ -558,7 +595,7 @@ echo "--------------------------------------------------------------------------
 echo "oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace"
 oc adm policy remove-role-from-user $RBACUserRole $UserName -n $UserNamespace
 echo
-oc "oc adm policy remove-role-from-user pod-shell $UserName --role-namespace=$UserNamespace -n $UserNamespace"
+echo "oc adm policy remove-role-from-user pod-shell $UserName --role-namespace=$UserNamespace -n $UserNamespace"
 oc adm policy remove-role-from-user pod-shell $UserName --role-namespace=$UserNamespace -n $UserNamespace
 
 # Deleting the Deployment (with the ReplicatSet and the Pod coming with it)
@@ -614,48 +651,45 @@ echo "Deleting $UserYAMLDir directory"
 echo "rm -rf $UserYAMLDir"
 rm -rf $UserYAMLDir
 
-echo "-----------------------------------------------------------------------------------------------------------------------------------------"
+echo "========================================================================================================================================="
 echo
 EOF
 
 chmod u+x $UserYAMLDir/$UserResourcesDeleteScript
 
+
+################################################################################################################
+# CLUSTER CONFIGURATION MODIFICATIONS START HERE
+
 echo
 echo "========================================================================================================================================="
-echo "LET'S DO THE JOB:"
-echo "-----------------"
+echo "NOW LET'S MAKE THE NECESSARY CHANGES TO THE CLUSTER:"
+echo "----------------------------------------------------"
+
 
 ################################################################################################################
 # DISALLOW ANY OPENSHIFT USER TO HAVE DEFAULT PERMISSION TO CREATE A NEW PROJECT
-if [ $Verbose -eq 1 ]; then
-  Remove_selfprovisioner
-else
-  Remove_selfprovisioner > /dev/null 2>&1
-fi
+
+Remove_selfprovisioner
 
 ################################################################################################################
 # CREATING THE USER THANKS TO AN HTPASSWD IDENTITY PROVIDER
 
-if [ $Verbose -eq 1 ]; then
-  echo
-  echo "-----------------------------------------------------------------------------------------------------------------------------------------"
-  echo "CREATING THE USER $UserName THANKS TO AN HTPASSWD IDENTITY PROVIDER"
-  echo "-------------------------------------------------------------------------------"
-fi
-
 Add_User_Definition $UserName $UserPassword
-
-[ $Verbose -eq 1 ] && echo "-----------------------------------------------------------------------------------------------------------------------------------------"
-
 
 
 ################################################################################################################
 # CREATING THE NAMESPACE $UserNamespace thanks to $UserYAMLDir/$UserNSCreationFile bash script
 
+
 if [ $Verbose -eq 1 ]; then
   $UserYAMLDir/$UserNSCreationFile
 else
+  echo
+  echo "Creating the $UserNamespace namespace:"
+  echo "--------------------------------------"
   $UserYAMLDir/$UserNSCreationFile >/dev/null
+  echo "Done"
 fi
 
 
@@ -667,7 +701,11 @@ if [ $DockerUserOption -eq 1 ]; then
   if [ $Verbose -eq 1 ]; then
     $UserYAMLDir/$DockerSecretCreationFile
   else
+    echo
+    echo "Creating an OpenShift Secret to pull docker images with $DockerUser ID:"
+    echo "-----------------------------------------------------------------------"
     $UserYAMLDir/$DockerSecretCreationFile >/dev/null
+    echo "Done"
   fi
 fi
 
@@ -686,12 +724,15 @@ if [ $Verbose -eq 1 ]; then
   echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 fi
 
+echo
+echo "Creating the PV, PVC and POD resources:"
+echo "---------------------------------------"
+
 for i in $UserImagesDevice_PvYamlFile $UserImagesDevice_PvcYamlFile $UserYamlFile; do
-  echo 
-  echo "oc create -f $i"
+  [ $Verbose -eq 1 ] && echo && echo "oc create -f $i"
   if ! oc create -f $i 2> $TempFile; then
     if grep -q "already exists" $TempFile; then
-      echo "  --> already exists"
+      echo "  $i --> already exists"
     else
       cat $TempFile
     fi
@@ -704,28 +745,16 @@ sleep 2 # Giving some time for resources to be here
 ################################################################################################################
 # ADDING RBAC ROLE FOR USER TO ACCESS THE NAMESPACE
 
-if [ $Verbose -eq 1 ]; then
-  echo
-  echo "========================================================================================================================================="
-  echo "ADDING \"$RBACUserRole\" RBAC ROLE FOR THE USER $UserName TO ACCESS THE NAMESPACE $UserNamespace"
-  echo "------------------------------------------------------------------------------------------------------------------------"
-fi
-
 echo
-echo "oc adm policy add-role-to-user $RBACUserRole $UserName -n $UserNamespace"
-echo "     (\"User not found\" warning is normal)"
+echo "Adding \"$RBACUserRole\" RBAC role for the user $UserName to access the $UserNamespace namespace ('User not found' warning is normal) :"
+echo "------------------------------------------------------------------------------------------------------------------------"
+
+[ $Verbose -eq 1 ] && echo && echo "oc adm policy add-role-to-user $RBACUserRole $UserName -n $UserNamespace"
 oc adm policy add-role-to-user $RBACUserRole $UserName -n $UserNamespace
 
 
 ################################################################################################################
 # CREATING THE pod-shell ROLE FOR THE PROJECT AND GIVING THIS ROLE TO THE USER
-
-if [ $Verbose -eq 1 ]; then
-  echo
-  echo "========================================================================================================================================="
-  echo "CREATING \"pod-shell\" ROLE FOR THE PROJECT $UserNamespace AND GIVE IT TO THE USER $UserName"
-  echo "------------------------------------------------------------------------------------------------------------------------"
-fi
 
 Create_podshell $UserName $UserNamespace
 
@@ -763,19 +792,20 @@ MyPod="pod/`oc -n $UserNamespace get pod --no-headers=true | awk '{print $1}'`"
 
 echo
 echo "========================================================================================================================================="
-echo "USEFUL COMMANDS TO ACCESS THE NEWLY CREATED RESOURCES:"
-echo "---------------------------------------------------"
+echo "USEFUL CLI COMMAND TO ACCESS THE NEWLY CREATED RESOURCES:"
+echo "---------------------------------------------------------"
 echo 
 echo "  oc -n $UserNamespace rsh $MyPod" 
 echo "========================================================================================================================================="
+
 
 ################################################################################################################
 # DISPLAYING THE BASH SCRIPT GENERATED FOR DELETING THE USER RESOURCES
 
 echo
 echo "========================================================================================================================================="
-echo "SCRIPTS TO USE IN ORDER TO DELETE THE USER RESOURCES (PV, PVC, POD, NAMESPACE):"
-echo "-------------------------------------------------------------------------------"
+echo "SCRIPTS TO USE IN ORDER TO DELETE THE CREATED USER RESOURCES (PV, PVC, POD, NAMESPACE, USER):"
+echo "---------------------------------------------------------------------------------------------"
 echo "2 choices:"
 echo "---------:"
 echo

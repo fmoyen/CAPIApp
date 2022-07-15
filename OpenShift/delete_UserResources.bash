@@ -98,6 +98,8 @@ done
 ################################################################################################################
 # ASKING FOR THE USER NAME
 
+clear
+
 if [ $UserOption -eq 0 ]; then
   while [[ "$UserName" == "" ]]; do
     echo
@@ -133,8 +135,9 @@ echo
 echo "========================================================================================================================================="
 echo "DELETING RESOURCES FOR USER $UserName..."
 echo
-echo "Warning: PVC deletion may take a minute as it needs to wait for Pod complete deletion"
-echo "         Namespace deletion is also not instantaneous"
+echo "Warning:"
+echo "  Some deletion operations such as deleting PVC and namespace, may not be instantaneous"
+echo "  (for example, PVC deletion needs to wait for Pod complete deletion)"
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
 
 # Removing the RBAC User Roles
