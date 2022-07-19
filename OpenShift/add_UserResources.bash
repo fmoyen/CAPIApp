@@ -75,7 +75,7 @@ DockerPasswordOption=0
 Verbose=0
 
 TempDir=/tmp
-TempFile=$TempDir/user_CAPIapp.tmp
+TempFile=$TempDir/add_UserResources.tmp
 OauthInitialConfig=$TempDir/oauth_initial.json
 OauthFinalConfig=$TempDir/oauth_final.json
 HtpasswdFile=$TempDir/users.htpasswd
@@ -818,8 +818,8 @@ echo
 echo "  $UserYAMLDir/$UserResourcesDeleteScript"
 echo "    --> Dedicated script for $UserName user (This script will also delete $UserYAMLDir directory)"
 echo
-echo "  $RealPath/delete_UserResources.bash -u $UserName -d $UserYAMLDir"
-echo "    --> Generic script. That's why you need to provide the Username and (if you want to delete it) the directory where the YAML/scripts files used to create this user are located"
+echo "  $RealPath/delete_UserResources.bash -u $UserName -c $CardName -d $UserYAMLDir"
+echo "    --> Generic script. That's why you need to provide the user name, the card name and (if you want to delete it) the directory where the YAML/scripts files used to create this user are located"
 echo "========================================================================================================================================="
 
 

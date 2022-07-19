@@ -22,14 +22,17 @@ RBACUserRole="view"
 SecretName="${IDProviderName}-secret"
 
 UserName=""
+CardName="nul"
 UserNamespace=""
 UserDir=""
 UserOption=0
+CardOption=0
 DirOption=0
 ForceOption=0
 
 TempDir=/tmp
 HtpasswdFile=$TempDir/users.htpasswd
+TempFile=$TempDir/delete_UserResources.tmp
 
 ################################################################################################################
 # FUNCTIONS
@@ -48,6 +51,7 @@ function usage
   echo "  + Missing parameters  => `basename $0` asks questions about the missing parameters"
   echo
   echo "  + -u <User Name> : the Openshift user name whose resources you want to be deleted"
+  echo "  + -c <Card Name> : the type of card that the user has requested (the card type is used in the user's resource name. That's why we need to know it)"
   echo
   echo "Optional parameters:"
   echo "--------------------"
@@ -61,7 +65,7 @@ function usage
   echo "`basename $0`"
   echo "`basename $0` -u Fabrice"
   echo "`basename $0` -u Fabrice -d /tmp/Fabrice"
-  echo "`basename $0` -u Fabrice -f"
+  echo "`basename $0` -u Fabrice -c ad9h3 -d /tmp/Fabricei -f"
   echo
   exit 0
 }
@@ -71,11 +75,15 @@ function usage
 # CHECKING IF PARAMETERS ARE GIVEN OR WE NEED TO ASK QUESTIONS
 #
 
-while getopts ":u:d:fh" option; do
+while getopts ":u:c:d:fh" option; do
   case $option in
     u)
       UserName=$OPTARG
       UserOption=1
+    ;;
+    c)
+      CardName=$OPTARG
+      CardOption=1
     ;;
     d)
       UserDir=$OPTARG
@@ -117,6 +125,31 @@ fi
 
 UserNamespace="$UserName-project"
 
+################################################################################################################
+# ASKING FOR THE CARD
+
+TrapCmd="rm -f $TempFile"
+touch $TempFile
+trap "$TrapCmd" EXIT
+
+NodeList=`oc get nodes | grep worker | awk '{print $1}'`
+
+for Node in $NodeList; do
+  echo $Node  >> $TempFile
+  oc describe node $Node | sed -n '/Capacity:/,/Allocatable/p' | grep xilinx.com >> $TempFile
+done
+
+if [ $CardOption -eq 0 ]; then
+  while ! grep -q $CardName $TempFile; do
+    echo
+    echo "Please choose between the following card type:"
+    echo "----------------------------------------------"
+    cat $TempFile | grep xilinx.com | awk -F"-" '{print $2}' | awk -F"_" '{print $1}' | sort | uniq
+    echo -e "?: \c"
+    read CardName
+  done
+fi
+
 
 ################################################################################################################
 # DELETING THE USER RESOURCES
@@ -152,8 +185,8 @@ oc adm policy remove-role-from-user pod-shell $UserName --role-namespace=$UserNa
 # Deleting the Deployment (with the ReplicatSet and the Pod coming with it)
 echo
 echo "-----------------------------------------------------------------------------------------------------------------------------------------"
-echo "oc -n $UserNamespace delete deployment.apps/oc-$UserName-ad9h3"
-oc -n $UserNamespace delete deployment.apps/oc-$UserName-ad9h3
+echo "oc -n $UserNamespace delete deployment.apps/oc-$UserName-$CardName"
+oc -n $UserNamespace delete deployment.apps/oc-$UserName-$CardName
 
 # Deleting PVC & PV
 echo
