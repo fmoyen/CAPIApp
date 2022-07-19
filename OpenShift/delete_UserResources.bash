@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################################################
-# Script that will delete all resources for the user $UserName (PV, PVC, POD, Namespace)
+# Script that will delete an OpenShift user and all his associated resources (PV, PVC, POD, Namespace)
 # Author: Fabrice MOYEN (IBM)
 
 

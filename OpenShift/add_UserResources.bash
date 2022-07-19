@@ -1,21 +1,27 @@
 #!/bin/bash
 
 ################################################################################################################
-# Bash script used when a standard user wants a POD with an OpenCAPI card
+# Bash script used to create an OpenShift user and all his needed resources to give him access to an OpenCAPI card
 # Author: Fabrice MOYEN (IBM)
 
-# We need to:
-#  - ask for the user name
-#  - ask for the type of card requested (like ad9h3)
-#  - generate the namespace (project) with the user name
-#  - give access to the namespace for the user (RBAC Role)
-#  - generate the yaml definition files (project, name, etc)
-#  - generate a script to delete all user/namespace resources when not needed anymore
-#  - generate the PV/PVC pointing to the user binaries directory
+# To do its job, this script needs to know:
+#  - the user name and the password that will be used by the user to connect to the OpenShift cluster
+#  - the type of card requested (like ad9h3)
+#  - Optionally a docker account (and his password) to be used to pull docker images (this in order to bypass docker pull rates limits)
+#
+# The script will then:
+#  - configure the cluster to prohibit any user from creating namespaces (projects)
+#  - generate the yaml definition files needed to create the user resources (namespace, POD, etc)
+#  - generate a script that may be used to delete all user resources when not needed anymore
+#  - create the user (today using an htpasswd ID provider)
+#  - create the namespace (project) for the user
+#  - create the PV/PVC pointing to the user binaries directory
 #  - create the POD/container with access to the volume hosting the user partial binaries
+#  - give the user access to the namespace with the "view" RBAC Role
+#  - create a pod-shell role (allowing to connect to a pod console) and give it to the user (so the user will have "view + pod-shell" role
 #
 # Parameters to adapt to the environment once:
-#  - UserYAMLRootDir : where all the scripts needed to generate the user environment (and to delete it) will be stored
+#  - UserYAMLRootDir : where all the YAML/scripts files needed to generate the user environment (and to delete it) will be stored
 
 
 ################################################################################################################
@@ -36,7 +42,7 @@ IDProviderName="opfh-htpasswd"
 RealPath=`realpath $0`
 RealPath=`dirname $RealPath`
 
-YamlDir="$RealPath/OPENCAPI-user-device_requested/current/OCAPI_requested"
+YamlDir="$RealPath/OPENCAPI-user-device_requested"
 
 YamlFile=`ls $YamlDir/OPENCAPI-*-deploy.yaml 2>/dev/null | head -1`
 ImagesDevice_PvYamlFile=`ls $YamlDir/images-user-pv.yaml 2>/dev/null`
@@ -113,9 +119,9 @@ function usage
   echo "--------"
   echo "`basename $0`"
   echo "`basename $0` -u Fabrice"
-  echo "`basename $0` -u Fabrice -s XXXX -c ad9h3"
+  echo "`basename $0` -u Fabrice -p XXXX -c ad9h3"
   echo "`basename $0` -u Fabrice -c ad9h3 -d fmoyen"
-  echo "`basename $0` -u Fabrice -s XXXX -c ad9h3 -d fmoyen -s YYYY -v"
+  echo "`basename $0` -u Fabrice -p XXXX -c ad9h3 -d fmoyen -s YYYY -v"
   echo
   exit 0
 }
@@ -137,7 +143,7 @@ function Add_User_Definition
 
   if ! oc get secret $SecretName -n openshift-config > /dev/null 2>&1; then 
     echo
-    echo "Creating a new OpenShift secret ($SecretName) with $user info"
+    echo "Creating a new OpenShift secret ($SecretName) with $user info:"
     echo "--------------------------------------------------------------------------"
     [ $Verbose -eq 1 ] && echo "htpasswd -c -Bb $HtpasswdFile $user XXXX"
     htpasswd -c -Bb $HtpasswdFile $user $password  # Create a new $HtpasswdFile file with $user/$password info
@@ -145,8 +151,8 @@ function Add_User_Definition
     oc create secret generic $SecretName --from-file=htpasswd=$HtpasswdFile -n openshift-config  # Create an OpenShift secret for saving the htpasswd users info
   else
     echo
-    echo "Updating the already existing OpenShift secret ($SecretName) with $user info"
-    echo "------------------------------------------------------------------------------------------"
+    echo "Updating the already existing OpenShift Secret entry ($SecretName) with $user info:"
+    echo "----------------------------------------------------------------------------------------------"
     [ $Verbose -eq 1 ] && echo "oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile"
     oc get secret $SecretName -ojsonpath={.data.htpasswd} -n openshift-config | base64 --decode > $HtpasswdFile  # Save the current Openshift secret config into an htpasswd file
     [ $Verbose -eq 1 ] && echo && echo "htpasswd -Bb $HtpasswdFile $user XXXX"
@@ -159,8 +165,8 @@ function Add_User_Definition
   # Update the OAuth Identity Providers configuration with the new secret just created/updated above 
 
     echo
-    echo "Pushing the Identity Provider to the Authentication Cluster Operator (oauth) if it doesn't already exist"
-    echo "--------------------------------------------------------------------------------------------------------"
+    echo "Pushing the Identity Provider to the Authentication Cluster Operator (oauth) if it doesn't already exist:"
+    echo "---------------------------------------------------------------------------------------------------------"
   # Get the oauth initial (current) config in JSON format and write it in $OauthInitialConfig file
   [ $Verbose -eq 1 ] && echo "oc get oauth.config.openshift.io/cluster -o json > $OauthInitialConfig"
   oc get oauth.config.openshift.io/cluster -o json > $OauthInitialConfig
@@ -192,8 +198,8 @@ function Add_User_Definition
 function Remove_selfprovisioner
 {
   echo
-  echo "Disallowing any OpenShift user to have default permission to create a new project"
-  echo "---------------------------------------------------------------------------------" 
+  echo "Prohibiting any standard OpenShift user from creating a new project:"
+  echo "--------------------------------------------------------------------" 
 
   if oc describe clusterrolebinding.rbac self-provisioners | grep -q "system:authenticated:oauth"; then
     [ $Verbose -eq 1 ] && echo "oc patch clusterrolebinding.rbac self-provisioners -p '{\"subjects\": null}'"
@@ -807,13 +813,26 @@ echo "==========================================================================
 echo "SCRIPTS TO USE IN ORDER TO DELETE THE CREATED USER RESOURCES (PV, PVC, POD, NAMESPACE, USER):"
 echo "---------------------------------------------------------------------------------------------"
 echo "2 choices:"
-echo "---------:"
+echo "----------"
 echo
 echo "  $UserYAMLDir/$UserResourcesDeleteScript"
 echo "    --> Dedicated script for $UserName user (This script will also delete $UserYAMLDir directory)"
 echo
 echo "  $RealPath/delete_UserResources.bash -u $UserName -d $UserYAMLDir"
-echo "    --> generic script so you need to provide the Username and the directory (where the YAML files and scripts for this user are located) if you want to delete it"
+echo "    --> Generic script. That's why you need to provide the Username and (if you want to delete it) the directory where the YAML/scripts files used to create this user are located"
+echo "========================================================================================================================================="
+
+
+################################################################################################################
+# WARNING OUTPUT
+
+echo
+echo "========================================================================================================================================="
+echo "WARNING:"
+echo "--------"
+echo
+echo "The OpenShift cluster (the \"oauth\" authentication cluster operator) could take a minute or two to validate the creation of the new user."
+echo "The connection with this user will fail during this time. It is then 'urgent' to wait ;-P"
 echo "========================================================================================================================================="
 
 echo
