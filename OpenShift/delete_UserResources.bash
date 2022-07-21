@@ -65,7 +65,7 @@ function usage
   echo "`basename $0`"
   echo "`basename $0` -u Fabrice"
   echo "`basename $0` -u Fabrice -d /tmp/Fabrice"
-  echo "`basename $0` -u Fabrice -c ad9h3 -d /tmp/Fabricei -f"
+  echo "`basename $0` -u Fabrice -c ad9h3 -d /tmp/Fabrice -f"
   echo
   exit 0
 }
