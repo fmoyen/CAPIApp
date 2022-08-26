@@ -110,7 +110,7 @@ function usage
   echo
   echo "Docker pull rates limits are based on individual IP address. For anonymous users, the rate limit is set to 100 pulls per 6 hours per IP address."
   echo "  ==> From a corporate network, the 100 pulls limit can be reached quickly"
-  echo "For Docker authenticated users, the rate limit is set to 200 pulls per 6 hour period per user, which is much more confortable."
+  echo "For Docker authenticated users, the rate limit is set to 200 pulls per 6 hour period per user, which is much more comfortable."
   echo
   echo "  + -v                   : verbose output"
   echo "  + -h                   : this usage info"
